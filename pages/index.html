@@ -26,7 +26,14 @@
                 <div id="search-suggestions" class="search-suggestions"></div>
             </div>
             
-            <nav class="nav">
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" id="mobile-menu-btn">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            
+            <nav class="nav" id="nav-menu">
                 <a href="#home" class="nav-link active">Home</a>
                 <a href="#ongoing" class="nav-link">Ongoing</a>
                 <a href="#completed" class="nav-link">Completed</a>
@@ -39,7 +46,10 @@
     <section class="hero-section">
         <div class="hero-content">
             <div class="hero-icon">
-                <span class="hero-icon-symbol">🎬</span>
+                <img src="../kanade.jpg" alt="Kanade" class="hero-icon-symbol" 
+                     onload="console.log('Kanade image loaded successfully');"
+                     onerror="console.log('Error loading kanade.jpg from:', this.src); this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <span class="hero-icon-fallback" style="display:none; font-size: 2.5rem; color: white;">🎬</span>
             </div>
             <h1 class="hero-title">Renzoku</h1>
             <p class="hero-subtitle">

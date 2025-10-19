@@ -4,7 +4,39 @@ const API_BASE_URL = 'https://www.sankavollerei.com/anime/anime';
 // Get slug from URL parameters
 function getAnimeSlug() {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('slug');
+    let slug = urlParams.get('slug');
+    
+    if (!slug) {
+        console.log('No slug found in URL parameters');
+        return null;
+    }
+    
+    // Decode URL-encoded slug
+    slug = decodeURIComponent(slug);
+    console.log('Raw slug from URL:', slug);
+    
+    // Process slug to remove URL prefixes - ENHANCED REGEX
+    if (typeof slug === 'string') {
+        // Remove common URL prefixes with more specific regex
+        slug = slug.replace(/^https?:\/\/[^\/]+\/anime\//, '');
+        slug = slug.replace(/^https?:\/\/[^\/]+\/anime\/anime\//, '');
+        slug = slug.replace(/^https?:\/\/[^\/]+\/anime\/detail\//, '');
+        slug = slug.replace(/\/$/, ''); // Remove trailing slash
+        slug = slug.trim();
+        
+        // Additional cleanup for common patterns
+        slug = slug.replace(/^https?:\/\//, ''); // Remove any remaining protocol
+        slug = slug.replace(/^[^\/]+\//, ''); // Remove domain part
+        
+        // Remove remaining 'anime/' prefix if exists
+        slug = slug.replace(/^anime\//, '');
+        
+        // Final cleanup
+        slug = slug.trim();
+    }
+    
+    console.log('Processed slug:', slug);
+    return slug;
 }
 
 // Fetch anime detail data from API
@@ -12,44 +44,99 @@ async function fetchAnimeDetail(slug) {
     try {
         console.log('Fetching anime detail for slug:', slug);
         
-        // Add timeout to prevent hanging
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        // Try different API endpoints and methods
+        const endpoints = [
+            `${API_BASE_URL}/${slug}`,
+            `https://www.sankavollerei.com/anime/anime/${slug}`,
+            `https://www.sankavollerei.com/anime/detail/${slug}`,
+            `https://www.sankavollerei.com/anime/info/${slug}`,
+            // Try with different slug formats
+            `https://www.sankavollerei.com/anime/anime/${slug}-sub-indo`,
+            `https://www.sankavollerei.com/anime/anime/${slug}-sub`,
+            `https://www.sankavollerei.com/anime/anime/${slug}-dub`,
+            // Try without sub-indo suffix
+            `https://www.sankavollerei.com/anime/anime/${slug.replace('-sub-indo', '')}`,
+            `https://www.sankavollerei.com/anime/anime/${slug.replace('-sub', '')}`,
+            `https://www.sankavollerei.com/anime/anime/${slug.replace('-dub', '')}`
+        ];
         
-        const response = await fetch(`${API_BASE_URL}/${slug}`, {
-            signal: controller.signal,
-            headers: {
-                'Accept': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        console.log('Will try', endpoints.length, 'different endpoints');
+        
+        for (let i = 0; i < endpoints.length; i++) {
+            const url = endpoints[i];
+            try {
+                console.log(`[${i + 1}/${endpoints.length}] Trying detail URL:`, url);
+                
+                // Add timeout to prevent hanging
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced timeout
+                
+                const response = await fetch(url, {
+                    signal: controller.signal,
+                    method: 'GET',
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'Accept': 'application/json, text/plain, */*',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Referer': 'https://www.sankavollerei.com/',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    },
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                
+                clearTimeout(timeoutId);
+                
+                console.log(`Response status for ${url}:`, response.status);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        console.log('404 - Endpoint not found, trying next...');
+                        continue;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('API Response for', url, ':', result);
+                
+                // Check for AI Detector response
+                if (result.status === 'Plana AI Detector') {
+                    console.log('AI Detector blocked request:', result.message);
+                    throw new Error('API sedang dalam mode perlindungan. Silakan coba lagi nanti.');
+                }
+                
+                if (result.status === 'success' && result.data) {
+                    console.log('✅ Found anime detail data from:', url);
+                    return result.data;
+                } else if (result.data && !result.status) {
+                    // Some APIs return data directly
+                    console.log('✅ Found anime detail data (direct) from:', url);
+                    return result.data;
+                } else {
+                    console.log('❌ Invalid response structure, trying next endpoint...');
+                    continue;
+                }
+                
+            } catch (error) {
+                console.log(`❌ URL ${url} failed:`, error.message);
+                if (error.message.includes('perlindungan') || error.message.includes('AI Detector')) {
+                    throw error; // Don't try other URLs if AI blocked
+                }
+                if (error.name === 'AbortError') {
+                    console.log('⏰ Request timeout, trying next endpoint...');
+                    continue;
+                }
+                continue;
             }
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const result = await response.json();
-        console.log('API Response:', result);
+        console.log('❌ All detail endpoints failed');
+        throw new Error('Semua endpoint detail anime gagal');
         
-        // Check for AI Detector response
-        if (result.status === 'Plana AI Detector') {
-            throw new Error('API sedang dalam mode perlindungan. Silakan coba lagi nanti.');
-        }
-        
-        if (result.status === 'success' && result.data) {
-            return result.data;
-        } else {
-            throw new Error('Data tidak valid dari API');
-        }
     } catch (error) {
         console.error('Error fetching anime detail:', error);
-        
-        if (error.name === 'AbortError') {
-            throw new Error('Request timeout. Server mungkin sedang sibuk.');
-        }
-        
         throw error;
     }
 }
@@ -63,10 +150,100 @@ function showLoading() {
 
 // Show error state
 function showError(message) {
+    console.log('Showing error:', message);
     document.getElementById('loading-state').style.display = 'none';
     document.getElementById('error-state').style.display = 'flex';
     document.getElementById('detail-content').style.display = 'none';
     document.getElementById('error-message').textContent = message;
+}
+
+// Fallback detail search using home API
+async function fallbackDetailSearch(slug) {
+    try {
+        console.log('Trying fallback detail search with home API for slug:', slug);
+        const response = await fetch('https://www.sankavollerei.com/anime/home', {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*',
+                'Referer': 'https://www.sankavollerei.com/'
+            }
+        });
+        
+        if (!response.ok) {
+            console.log('Home API response not ok:', response.status);
+            return null;
+        }
+        
+        const data = await response.json();
+        if (data.status !== 'success' || !data.data) {
+            console.log('Home API data invalid:', data);
+            return null;
+        }
+        
+        // Search in ongoing and completed anime
+        const allAnime = [...(data.data.ongoing_anime || []), ...(data.data.complete_anime || [])];
+        console.log('Total anime in home API:', allAnime.length);
+        
+        // Try different matching strategies
+        const matchingStrategies = [
+            // Exact match
+            item => item.slug === slug,
+            // Contains match
+            item => item.slug.includes(slug),
+            // Reverse contains match
+            item => slug.includes(item.slug),
+            // Match without sub-indo suffix
+            item => item.slug === slug.replace('-sub-indo', ''),
+            // Match without sub suffix
+            item => item.slug === slug.replace('-sub', ''),
+            // Match without dub suffix
+            item => item.slug === slug.replace('-dub', ''),
+            // Partial match
+            item => item.slug.split('-').some(part => slug.includes(part))
+        ];
+        
+        let anime = null;
+        for (let i = 0; i < matchingStrategies.length; i++) {
+            anime = allAnime.find(matchingStrategies[i]);
+            if (anime) {
+                console.log(`✅ Found anime using strategy ${i + 1}:`, anime.title, 'slug:', anime.slug);
+                break;
+            }
+        }
+        
+        if (!anime) {
+            console.log('❌ No anime found in home API with any matching strategy');
+            console.log('Available slugs:', allAnime.map(a => a.slug).slice(0, 10));
+            return null;
+        }
+        
+        // Create basic anime detail structure
+        const fallbackData = {
+            title: anime.title,
+            poster: anime.poster,
+            slug: anime.slug,
+            status: anime.status || 'Unknown',
+            rating: anime.rating || 'N/A',
+            synopsis: 'Sinopsis tidak tersedia untuk anime ini. Data ini diambil dari daftar anime yang sedang tayang/selesai.',
+            episode_lists: [],
+            recommendations: [],
+            genres: [],
+            type: anime.type || 'TV',
+            episode_count: anime.episode_count || '?',
+            duration: anime.duration || '24 min',
+            release_date: anime.release_date || '-',
+            studio: anime.studio || '-',
+            japanese_title: anime.japanese_title || '',
+            batch: anime.batch || null
+        };
+        
+        console.log('✅ Fallback detail search successful:', fallbackData.title);
+        return fallbackData;
+        
+    } catch (error) {
+        console.error('❌ Fallback detail search failed:', error);
+        return null;
+    }
 }
 
 // Show content
@@ -225,20 +402,56 @@ function createRecommendationCard(anime) {
 
 // Initialize the application
 async function init() {
+    console.log('=== DETAIL PAGE INIT START ===');
     const slug = getAnimeSlug();
     
     if (!slug) {
+        console.log('❌ No slug found, showing error');
         showError('Slug anime tidak ditemukan. Silakan kembali ke halaman home.');
         return;
     }
     
+    console.log('✅ Slug found:', slug);
+    console.log('Current URL:', window.location.href);
+    console.log('URL search params:', window.location.search);
+    
     showLoading();
     
     try {
-        const animeData = await fetchAnimeDetail(slug);
-        displayAnimeDetail(animeData);
+        console.log('🔄 Starting main detail API fetch...');
+        let animeData = await fetchAnimeDetail(slug);
+        
+        // If main detail API fails, try fallback
+        if (!animeData) {
+            console.log('❌ Main detail API failed, trying fallback...');
+            animeData = await fallbackDetailSearch(slug);
+        }
+        
+        if (animeData) {
+            console.log('✅ Anime data found, displaying...');
+            displayAnimeDetail(animeData);
+        } else {
+            console.log('❌ No anime data found from any source');
+            throw new Error('Tidak dapat menemukan detail anime');
+        }
+        
     } catch (error) {
-        console.error('Init error:', error);
+        console.error('❌ Init error:', error);
+        
+        // Try fallback if main API throws error
+        if (error.message.includes('perlindungan') || error.message.includes('AI Detector')) {
+            console.log('🔄 AI Detector blocked, trying fallback...');
+            try {
+                const fallbackData = await fallbackDetailSearch(slug);
+                if (fallbackData) {
+                    console.log('✅ Fallback successful, displaying...');
+                    displayAnimeDetail(fallbackData);
+                    return;
+                }
+            } catch (fallbackError) {
+                console.error('❌ Fallback detail search also failed:', fallbackError);
+            }
+        }
         
         let errorMessage = 'Gagal memuat detail anime. ';
         
@@ -248,12 +461,17 @@ async function init() {
             errorMessage += 'API sedang dalam mode perlindungan. Tunggu beberapa menit dan coba lagi.';
         } else if (error.message.includes('CORS')) {
             errorMessage += 'Masalah CORS. Pastikan menggunakan localhost server.';
+        } else if (error.message.includes('Tidak dapat menemukan')) {
+            errorMessage += 'Anime tidak ditemukan dalam database.';
         } else {
             errorMessage += 'Periksa koneksi internet Anda atau coba lagi nanti.';
         }
         
+        console.log('❌ Showing error message:', errorMessage);
         showError(errorMessage);
     }
+    
+    console.log('=== DETAIL PAGE INIT END ===');
 }
 
 // Start the application when DOM is ready

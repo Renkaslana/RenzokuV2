@@ -29,7 +29,7 @@ if %errorlevel% equ 0 (
 
 echo ✅ Menggunakan port %PORT%
 echo 🌐 Membuka browser...
-start http://localhost:%PORT%/pages/index.html
+start http://localhost:%PORT%
 echo.
 echo ✅ Server berjalan di: http://localhost:%PORT%
 echo 🚀 Menjalankan server...
@@ -38,7 +38,7 @@ echo ========================================
 echo   Server Renzoku berhasil dijalankan!
 echo ========================================
 echo.
-echo 📱 Akses website di: http://localhost:%PORT%/pages/index.html
+echo 📱 Akses website di: http://localhost:%PORT%
 echo 🛑 Tekan Ctrl+C untuk menghentikan server
 echo.
 

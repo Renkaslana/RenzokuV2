@@ -29,10 +29,10 @@
 }
 
 .hero-icon {
-    width: 80px;
-    height: 80px;
+    width: 120px;
+    height: 120px;
     background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-    border-radius: 20px;
+    border-radius: 25px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -41,8 +41,10 @@
 }
 
 .hero-icon-symbol {
-    font-size: 2.5rem;
-    color: white;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 25px;
 }
 
 .hero-title {
@@ -141,11 +143,14 @@
     }
     
     .hero-icon {
-        width: 60px;
-        height: 60px;
+        width: 100px;
+        height: 100px;
     }
     
     .hero-icon-symbol {
-        font-size: 2rem;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 20px;
     }
 }
