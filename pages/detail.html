@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Anime - Renzoku</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/detail.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1><a href="index.html" style="color: white; text-decoration: none;">🎬 Renzoku</a></h1>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Cari anime..." class="search-input">
+                    <button id="search-btn" class="search-btn">
+                        <span class="search-icon">🔍</span>
+                    </button>
+                </div>
+                <div id="search-suggestions" class="search-suggestions"></div>
+            </div>
+            
+            <nav class="nav">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="index.html#ongoing" class="nav-link">Ongoing</a>
+                <a href="index.html#completed" class="nav-link">Completed</a>
+                <a href="schedule.html" class="nav-link">Jadwal</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Loading State -->
+    <div id="loading-state" class="loading-fullscreen">
+        <div class="spinner"></div>
+        <p>Memuat detail anime...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="error-state" class="error-fullscreen" style="display: none;">
+        <div class="error-content">
+            <h2>❌ Terjadi Kesalahan</h2>
+            <p id="error-message">Gagal memuat data anime</p>
+            <div class="error-actions">
+                <button onclick="location.reload()" class="btn btn-primary">Coba Lagi</button>
+                <a href="index.html" class="btn btn-secondary">Kembali ke Home</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main id="detail-content" class="detail-page" style="display: none;">
+        <!-- Hero Banner -->
+        <section class="detail-hero">
+            <div class="hero-backdrop">
+                <img id="backdrop-img" src="" alt="">
+                <div class="backdrop-overlay"></div>
+            </div>
+            <div class="container">
+                <div class="hero-content">
+                    <div class="anime-poster-large">
+                        <img id="anime-poster" src="" alt="">
+                        <div class="rating-badge">
+                            <span class="rating-star">⭐</span>
+                            <span id="anime-rating">0.0</span>
+                        </div>
+                    </div>
+                    <div class="anime-details">
+                        <h1 id="anime-title" class="anime-title-large"></h1>
+                        <p id="anime-japanese-title" class="anime-subtitle"></p>
+                        
+                        <div class="anime-meta-large">
+                            <div class="meta-item">
+                                <span class="meta-label">Status</span>
+                                <span id="anime-status" class="meta-value status-badge"></span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Tipe</span>
+                                <span id="anime-type" class="meta-value"></span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Episode</span>
+                                <span id="anime-episodes" class="meta-value"></span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Durasi</span>
+                                <span id="anime-duration" class="meta-value"></span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Rilis</span>
+                                <span id="anime-release" class="meta-value"></span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Studio</span>
+                                <span id="anime-studio" class="meta-value"></span>
+                            </div>
+                        </div>
+
+                        <div id="anime-genres" class="genres-container"></div>
+
+                        <div id="batch-download" class="batch-section" style="display: none;">
+                            <a href="#" id="batch-link" target="_blank" class="btn btn-batch">
+                                📦 Download Batch
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Synopsis Section -->
+        <section class="content-section">
+            <div class="container">
+                <div class="section-card">
+                    <h2 class="section-title">📖 Sinopsis</h2>
+                    <p id="anime-synopsis" class="synopsis-text"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Episodes List -->
+        <section class="content-section">
+            <div class="container">
+                <div class="section-card">
+                    <h2 class="section-title">📺 Daftar Episode</h2>
+                    <div id="episodes-list" class="episodes-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recommendations -->
+        <section class="content-section">
+            <div class="container">
+                <h2 class="section-title">🎯 Rekomendasi Anime</h2>
+                <div id="recommendations-list" class="anime-grid"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Renzoku. Data dari <a href="https://www.sankavollerei.com" target="_blank">Sanka Vollerei API</a></p>
+        </div>
+    </footer>
+
+    <script src="../scripts/detail.js"></script>
+    <script src="../scripts/light-search.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal Rilis Anime - Renzoku</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/schedule.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1><a href="index.html" style="color: white; text-decoration: none;">🎬 Renzoku</a></h1>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Cari anime..." class="search-input">
+                    <button id="search-btn" class="search-btn">
+                        <span class="search-icon">🔍</span>
+                    </button>
+                </div>
+                <div id="search-suggestions" class="search-suggestions"></div>
+            </div>
+            
+            <nav class="nav">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="index.html#ongoing" class="nav-link">Ongoing</a>
+                <a href="index.html#completed" class="nav-link">Completed</a>
+                <a href="schedule.html" class="nav-link active">📅 Schedule</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Schedule Header -->
+    <section class="schedule-header">
+        <div class="container">
+            <div class="schedule-info">
+                <h1 class="schedule-title">📅 Jadwal Rilis Anime</h1>
+                <p class="schedule-subtitle">Lihat anime yang akan tayang berdasarkan hari dalam seminggu</p>
+            </div>
+            <div class="schedule-stats">
+                <span id="schedule-count" class="schedule-count">Memuat jadwal...</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading State -->
+    <div id="loading-state" class="loading-fullscreen">
+        <div class="spinner"></div>
+        <p>Memuat jadwal anime...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="error-state" class="error-fullscreen" style="display: none;">
+        <div class="error-content">
+            <h2>❌ Tidak Ada Jadwal</h2>
+            <p id="error-message">Gagal memuat jadwal anime</p>
+            <div class="error-actions">
+                <button onclick="location.reload()" class="btn btn-primary">Coba Lagi</button>
+                <a href="index.html" class="btn btn-secondary">Kembali ke Home</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Content -->
+    <main id="schedule-content" class="schedule-content" style="display: none;">
+        <div class="container">
+            <!-- Day Navigation -->
+            <div class="day-navigation">
+                <button class="day-btn active" data-day="all">📅 Semua Hari</button>
+                <button class="day-btn" data-day="Senin">📅 Senin</button>
+                <button class="day-btn" data-day="Selasa">📅 Selasa</button>
+                <button class="day-btn" data-day="Rabu">📅 Rabu</button>
+                <button class="day-btn" data-day="Kamis">📅 Kamis</button>
+                <button class="day-btn" data-day="Jumat">📅 Jumat</button>
+                <button class="day-btn" data-day="Sabtu">📅 Sabtu</button>
+                <button class="day-btn" data-day="Minggu">📅 Minggu</button>
+                <button class="day-btn" data-day="Random">📅 Random</button>
+            </div>
+
+            <!-- Schedule Grid -->
+            <div id="schedule-grid" class="schedule-grid">
+                <!-- Schedule will be populated here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Renzoku. Data dari <a href="https://www.sankavollerei.com" target="_blank">Sanka Vollerei API</a></p>
+        </div>
+    </footer>
+
+    <script src="../scripts/schedule.js"></script>
+    <script src="../scripts/safe-search.js"></script>
+</body>
+</html>

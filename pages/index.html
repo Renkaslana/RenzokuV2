@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Renzoku - Streaming Anime</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/hero-section.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>🎬 Renzoku</h1>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Cari anime..." class="search-input">
+                    <button id="search-btn" class="search-btn">
+                        <span class="search-icon">🔍</span>
+                    </button>
+                </div>
+                <div id="search-suggestions" class="search-suggestions"></div>
+            </div>
+            
+            <nav class="nav">
+                <a href="#home" class="nav-link active">Home</a>
+                <a href="#ongoing" class="nav-link">Ongoing</a>
+                <a href="#completed" class="nav-link">Completed</a>
+                <a href="schedule.html" class="nav-link">Jadwal</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="hero-icon">
+                <span class="hero-icon-symbol">🎬</span>
+            </div>
+            <h1 class="hero-title">Renzoku</h1>
+            <p class="hero-subtitle">
+                Website Anime buatan <span class="highlight">Fahren</span>, Nikmati koleksi anime terbaru dan terlengkap
+            </p>
+            <div class="hero-buttons">
+                <button class="hero-btn primary" onclick="document.getElementById('ongoing-container').scrollIntoView({behavior: 'smooth'})">
+                    Mulai Menonton →
+                </button>
+                <button class="hero-btn secondary" onclick="document.getElementById('search-input').focus()">
+                    🔍 Cari Anime
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Ongoing Anime Section -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">📺 Anime Ongoing</h2>
+                    <p class="section-subtitle">Anime yang sedang tayang</p>
+                </div>
+                <div id="ongoing-container" class="anime-grid">
+                    <!-- Loading placeholder -->
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Memuat data anime...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Completed Anime Section -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-title">✅ Anime Selesai</h2>
+                    <p class="section-subtitle">Anime yang sudah tamat</p>
+                </div>
+                <div id="completed-container" class="anime-grid">
+                    <!-- Loading placeholder -->
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Memuat data anime...</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Renzoku. Data dari <a href="https://www.sankavollerei.com" target="_blank">Sanka Vollerei API</a></p>
+        </div>
+    </footer>
+
+    <script src="../scripts/script.js"></script>
+    <script src="../scripts/safe-search.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Streaming Anime - Renzoku</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/episode.css">
+    <link rel="stylesheet" href="../styles/episode-improved.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="episode-header-nav">
+        <div class="container">
+            <div class="logo">
+                <h1><a href="index.html" style="color: white; text-decoration: none;">🎬 Renzoku</a></h1>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Cari anime..." class="search-input">
+                    <button id="search-btn" class="search-btn">
+                        <span class="search-icon">🔍</span>
+                    </button>
+                </div>
+                <div id="search-suggestions" class="search-suggestions"></div>
+            </div>
+            
+            <nav class="nav">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="index.html#ongoing" class="nav-link">Ongoing</a>
+                <a href="index.html#completed" class="nav-link">Completed</a>
+                <a href="schedule.html" class="nav-link">Jadwal</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Loading State -->
+    <div id="loading-state" class="loading-fullscreen">
+        <div class="spinner"></div>
+        <p>Sabar bang...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="error-state" class="error-fullscreen" style="display: none;">
+        <div class="error-content">
+            <h2>❌ Terjadi Kesalahan</h2>
+            <p id="error-message">Gagal memuat episode</p>
+            <div class="error-actions">
+                <button onclick="location.reload()" class="btn btn-primary">Coba Lagi</button>
+                <a href="index.html" class="btn btn-secondary">Kembali ke Home</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main id="episode-content" class="episode-page" style="display: none;">
+        <div class="container">
+            <!-- Episode Title -->
+            <div class="episode-header">
+                <h1 id="episode-title" class="episode-title-text"></h1>
+                <a id="anime-link" href="#" class="anime-link-btn">
+                    📖 Lihat Detail Anime
+                </a>
+            </div>
+
+            <!-- Video Player Section -->
+            <section class="player-section">
+                <div class="player-container">
+                    <iframe 
+                        id="video-player" 
+                        src="" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                
+            </section>
+
+            
+
+            <!-- Download Section -->
+            <section class="download-section">
+                <h2 class="download-main-title">
+                    <span class="download-icon">📥</span>
+                    Download Episode
+                </h2>
+                
+                <div class="download-cards-container">
+                    <!-- MP4 Downloads -->
+                    <div id="mp4-downloads" class="download-card">
+                        <div class="download-card-header">
+                            <span class="format-icon">🎬</span>
+                            <h3 class="download-card-title">Format MP4</h3>
+                        </div>
+                        <div class="download-options" id="mp4-grid">
+                            <!-- Download options will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- MKV Downloads -->
+                    <div id="mkv-downloads" class="download-card" style="display: none;">
+                        <div class="download-card-header">
+                            <span class="format-icon">🎬</span>
+                            <h3 class="download-card-title">Format MKV</h3>
+                        </div>
+                        <div class="download-options" id="mkv-grid">
+                            <!-- Download options will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Info Section -->
+            <section class="info-section">
+                <div class="info-card">
+                    <h3>💡 Informasi</h3>
+                    <ul class="info-list">
+                        <li>Pilih resolusi sesuai kecepatan internet Anda</li>
+                        <li>Resolusi lebih tinggi = kualitas lebih baik tapi file lebih besar</li>
+                        <li>Gunakan provider alternatif jika link tidak berfungsi</li>
+                        <li>Streaming menggunakan player Desustream</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Renzoku. Data dari <a href="https://www.sankavollerei.com" target="_blank">Sanka Vollerei API</a></p>
+        </div>
+    </footer>
+
+    <script src="../scripts/episode-optimized.js"></script>
+    <script src="../scripts/light-search.js"></script>
+    <script src="../scripts/episode-debug.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('../sw-episode.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered:', registration);
+                    })
+                    .catch((error) => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
+
