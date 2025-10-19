@@ -339,6 +339,13 @@ function initMobileMenu() {
         panel.className = 'mobile-menu-panel';
         panel.id = 'mobile-menu-panel';
         
+        // Add close button to mobile panel
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'mobile-menu-close';
+        closeBtn.innerHTML = '✕';
+        closeBtn.setAttribute('aria-label', 'Tutup menu');
+        panel.appendChild(closeBtn);
+        
         // Clone navigation links to mobile panel
         const navLinks = navMenu.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
@@ -350,16 +357,20 @@ function initMobileMenu() {
         document.body.appendChild(overlay);
         document.body.appendChild(panel);
         
+        // Function to close mobile menu
+        const closeMobileMenu = () => {
+            mobileMenuBtn.classList.remove('active');
+            overlay.classList.remove('active');
+            panel.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+        
         // Toggle mobile menu
         mobileMenuBtn.addEventListener('click', () => {
             const isActive = mobileMenuBtn.classList.contains('active');
             
             if (isActive) {
-                // Close menu
-                mobileMenuBtn.classList.remove('active');
-                overlay.classList.remove('active');
-                panel.classList.remove('active');
-                document.body.style.overflow = '';
+                closeMobileMenu();
             } else {
                 // Open menu
                 mobileMenuBtn.classList.add('active');
@@ -369,31 +380,23 @@ function initMobileMenu() {
             }
         });
         
+        // Close menu when clicking close button
+        closeBtn.addEventListener('click', closeMobileMenu);
+        
         // Close menu when clicking overlay
-        overlay.addEventListener('click', () => {
-            mobileMenuBtn.classList.remove('active');
-            overlay.classList.remove('active');
-            panel.classList.remove('active');
-            document.body.style.overflow = '';
-        });
+        overlay.addEventListener('click', closeMobileMenu);
         
         // Close menu when clicking nav links
         panel.addEventListener('click', (e) => {
             if (e.target.classList.contains('nav-link')) {
-                mobileMenuBtn.classList.remove('active');
-                overlay.classList.remove('active');
-                panel.classList.remove('active');
-                document.body.style.overflow = '';
+                closeMobileMenu();
             }
         });
         
         // Close menu on escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && mobileMenuBtn.classList.contains('active')) {
-                mobileMenuBtn.classList.remove('active');
-                overlay.classList.remove('active');
-                panel.classList.remove('active');
-                document.body.style.overflow = '';
+                closeMobileMenu();
             }
         });
     }

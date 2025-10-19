@@ -18,6 +18,18 @@
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
+/* CSS Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    overflow-x: hidden;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--dark-bg);
@@ -31,6 +43,8 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 20px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Header */
@@ -41,6 +55,9 @@ body {
     position: sticky;
     top: 0;
     z-index: 1000;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: visible;
 }
 
 .header .container {
@@ -531,28 +548,70 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+/* Tablet and Mobile Breakpoints */
+@media (max-width: 1024px) {
+    .mobile-menu-btn {
+        display: flex;
+    }
+    
+    .nav {
+        display: none;
+    }
+}
+
 @media (max-width: 768px) {
+    .container {
+        padding: 0 1rem;
+    }
+    
+    .header {
+        padding: 1rem 0;
+    }
+    
     .header .container {
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
-        gap: 1rem;
+        gap: 0.5rem;
+        padding: 0 1rem;
+        max-width: 100%;
+        overflow: visible;
     }
     
     .logo {
         order: 1;
+        flex-shrink: 0;
+    }
+    
+    .logo h1 {
+        font-size: 1.2rem;
     }
     
     .mobile-menu-btn {
-        display: flex;
+        display: flex !important;
         order: 3;
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+        margin-left: 0.5rem;
     }
     
     .search-container {
         order: 2;
         flex: 1;
-        max-width: none;
-        margin: 0 1rem;
+        max-width: calc(100% - 120px);
+        margin: 0 0.5rem;
+        min-width: 0;
+    }
+    
+    .search-input {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+    
+    .search-btn {
+        width: 36px;
+        height: 36px;
     }
 
     .nav {
@@ -578,16 +637,46 @@ body {
 }
 
 @media (max-width: 480px) {
+    .container {
+        padding: 0 8px;
+    }
+    
+    .header {
+        padding: 0.8rem 0;
+    }
+    
     .header .container {
-        padding: 0 15px;
+        padding: 0 8px;
+        gap: 0.3rem;
+    }
+    
+    .logo h1 {
+        font-size: 1rem;
+    }
+    
+    .mobile-menu-btn {
+        width: 28px;
+        height: 28px;
+        margin-left: 0.3rem;
+    }
+    
+    .hamburger-line {
+        height: 2.5px;
     }
 
     .search-container {
-        margin: 0 10px;
+        margin: 0 4px;
+        max-width: calc(100% - 100px);
     }
 
     .search-input {
         font-size: 16px; /* Prevent zoom on iOS */
+        padding: 6px 8px;
+    }
+    
+    .search-btn {
+        width: 32px;
+        height: 32px;
     }
 
     .anime-grid {
@@ -600,18 +689,63 @@ body {
     }
 }
 
-/* Mobile Menu Button */
+@media (max-width: 360px) {
+    .container {
+        padding: 0 6px;
+    }
+    
+    .header {
+        padding: 0.6rem 0;
+    }
+    
+    .header .container {
+        padding: 0 6px;
+        gap: 0.2rem;
+    }
+    
+    .logo h1 {
+        font-size: 0.9rem;
+    }
+    
+    .mobile-menu-btn {
+        width: 26px;
+        height: 26px;
+        margin-left: 0.2rem;
+    }
+    
+    .hamburger-line {
+        height: 2px;
+    }
+    
+    .search-container {
+        margin: 0 2px;
+        max-width: calc(100% - 90px);
+    }
+    
+    .search-input {
+        font-size: 14px;
+        padding: 5px 6px;
+    }
+    
+    .search-btn {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+/* Mobile Menu Button - Hidden by default */
 .mobile-menu-btn {
     display: none;
     flex-direction: column;
     justify-content: space-around;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     background: transparent;
     border: none;
     cursor: pointer;
     padding: 0;
     z-index: 1001;
+    position: relative;
 }
 
 .hamburger-line {
@@ -621,6 +755,7 @@ body {
     border-radius: 2px;
     transition: all 0.3s ease;
     transform-origin: center;
+    display: block;
 }
 
 /* Mobile Menu Animation */
@@ -667,10 +802,37 @@ body {
     transition: right 0.3s ease;
     padding: 80px 0 20px;
     box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
 }
 
 .mobile-menu-panel.active {
     right: 0;
+}
+
+/* Mobile Menu Close Button */
+.mobile-menu-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 1001;
+}
+
+.mobile-menu-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
 }
 
 .mobile-menu-panel .nav-link {
@@ -682,12 +844,54 @@ body {
     font-weight: 500;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s ease;
+    margin-top: 20px;
 }
 
 .mobile-menu-panel .nav-link:hover,
 .mobile-menu-panel .nav-link.active {
     background: rgba(255, 255, 255, 0.1);
     padding-left: 2.5rem;
+}
+
+/* Mobile Menu Panel Responsive */
+@media (max-width: 480px) {
+    .mobile-menu-panel {
+        width: 260px;
+        right: -260px;
+    }
+    
+    .mobile-menu-close {
+        top: 15px;
+        right: 15px;
+        width: 35px;
+        height: 35px;
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .mobile-menu-panel {
+        width: 240px;
+        right: -240px;
+    }
+    
+    .mobile-menu-close {
+        top: 12px;
+        right: 12px;
+        width: 32px;
+        height: 32px;
+        font-size: 1.2rem;
+    }
+    
+    .mobile-menu-panel .nav-link {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .mobile-menu-panel .nav-link:hover,
+    .mobile-menu-panel .nav-link.active {
+        padding-left: 2rem;
+    }
 }
 
 /* Footer Responsive Design */
