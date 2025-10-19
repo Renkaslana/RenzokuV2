@@ -1,5 +1,6 @@
 // API Configuration
 const API_BASE_URL = 'https://www.sankavollerei.com/anime/anime';
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
 
 // Get slug from URL parameters
 function getAnimeSlug() {
@@ -71,20 +72,30 @@ async function fetchAnimeDetail(slug) {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced timeout
                 
-                const response = await fetch(url, {
-                    signal: controller.signal,
-                    method: 'GET',
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        'Accept': 'application/json, text/plain, */*',
-                        'Accept-Language': 'en-US,en;q=0.9',
-                        'Referer': 'https://www.sankavollerei.com/',
-                        'Cache-Control': 'no-cache',
-                        'Pragma': 'no-cache'
-                    },
-                    mode: 'cors',
+                let response;
+                try {
+                    response = await fetch(url, {
+                        signal: controller.signal,
+                        method: 'GET',
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            'Accept': 'application/json, text/plain, */*',
+                            'Accept-Language': 'en-US,en;q=0.9',
+                            'Referer': 'https://www.sankavollerei.com/',
+                            'Cache-Control': 'no-cache',
+                            'Pragma': 'no-cache'
+                        },
+                        mode: 'cors',
                     credentials: 'omit'
                 });
+                } catch (corsError) {
+                    console.log('Direct API failed, trying CORS proxy...');
+                    // Use CORS proxy as fallback
+                    const proxyUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
+                    response = await fetch(proxyUrl, {
+                        signal: controller.signal
+                    });
+                }
                 
                 clearTimeout(timeoutId);
                 

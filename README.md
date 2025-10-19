@@ -276,7 +276,6 @@ Renzoku/
 │   ├── hero-section.css             # Hero section styles
 │   ├── detail.css                   # Detail page styles
 │   ├── episode.css                  # Episode page styles
-│   ├── episode-improved.css         # Episode improvements
 │   ├── search.css                   # Search page styles
 │   └── schedule.css                 # Schedule page styles
 │
@@ -284,8 +283,6 @@ Renzoku/
 │   ├── script.js                    # Main script (homepage)
 │   ├── detail.js                    # Detail page logic
 │   ├── episode.js                   # Episode page logic
-│   ├── episode-optimized.js         # Optimized episode script
-│   ├── episode-debug.js             # Debug version episode
 │   ├── search.js                    # Search page logic
 │   ├── schedule.js                  # Schedule page logic
 │   ├── safe-search.js               # Full search dengan suggestions
@@ -298,16 +295,15 @@ Renzoku/
 │
 ├── 🔧 safe-search.js                # Backward compatibility
 ├── 🔧 search.js                     # Backward compatibility
-├── 🔧 sw-episode.js                 # Service Worker (experimental)
 └── 🦇 start-renzoku.bat             # Root launcher (backward compat)
 ```
 
 ### 📊 Project Statistics
-- **Total Files**: ~25 files
+- **Total Files**: 24 files
 - **HTML Pages**: 5 halaman
-- **CSS Files**: 7 stylesheets
-- **JavaScript Files**: 10+ scripts
-- **Launchers**: 3 platform scripts
+- **CSS Files**: 6 stylesheets
+- **JavaScript Files**: 7 scripts
+- **Launchers**: 3 platform scripts (Windows, PowerShell, Shell)
 - **Lines of Code**: ~5000+ LOC
 
 ---

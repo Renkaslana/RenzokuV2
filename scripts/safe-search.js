@@ -3,6 +3,7 @@
 
 // Search API Configuration
 const SEARCH_API_URL = 'https://www.sankavollerei.com/anime/search';
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
 
 // Cache untuk suggestions
 const suggestionCache = new Map();
@@ -60,7 +61,15 @@ const SafeSearch = {
             console.log('Fetching search results for:', query);
             lastSearchTime = Date.now();
             
-            const response = await fetch(`${SEARCH_API_URL}/${encodeURIComponent(query)}`);
+            let response;
+            try {
+                response = await fetch(`${SEARCH_API_URL}/${encodeURIComponent(query)}`);
+            } catch (corsError) {
+                console.log('Direct API failed, trying CORS proxy...');
+                // Use CORS proxy as fallback
+                const proxyUrl = `${CORS_PROXY}${encodeURIComponent(`${SEARCH_API_URL}/${encodeURIComponent(query)}`)}`;
+                response = await fetch(proxyUrl);
+            }
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);

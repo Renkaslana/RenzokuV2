@@ -1,5 +1,6 @@
 // API Configuration
 const API_BASE_URL = 'https://www.sankavollerei.com/anime/episode';
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
 
 // Get slug from URL parameters
 function getEpisodeSlug() {
@@ -10,7 +11,24 @@ function getEpisodeSlug() {
 // Fetch episode data from API
 async function fetchEpisodeData(slug) {
     try {
-        const response = await fetch(`${API_BASE_URL}/${slug}`);
+        // Try direct API call first
+        let response;
+        try {
+            response = await fetch(`${API_BASE_URL}/${slug}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Referer': 'https://www.sankavollerei.com/',
+                    'Origin': 'https://www.sankavollerei.com'
+                }
+            });
+        } catch (corsError) {
+            console.log('Direct API failed, trying CORS proxy...');
+            // Use CORS proxy as fallback
+            const proxyUrl = `${CORS_PROXY}${encodeURIComponent(`${API_BASE_URL}/${slug}`)}`;
+            response = await fetch(proxyUrl);
+        }
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -65,24 +83,35 @@ function extractAnimeSlug(url) {
 
 // Display episode content
 function displayEpisode(episode) {
+    // Debug: Log episode data structure
+    console.log('Episode data received:', episode);
+    console.log('Download URLs:', episode.download_urls);
+    
     // Update page title
     updatePageTitle(episode.episode);
     
     // Episode title
-    document.getElementById('episode-title').textContent = episode.episode;
+    const episodeTitle = document.getElementById('episode-title');
+    if (episodeTitle) {
+        episodeTitle.textContent = episode.episode;
+    }
     
     // Anime link
     const animeSlug = extractAnimeSlug(episode.anime.slug);
     const animeLink = document.getElementById('anime-link');
-    if (animeSlug) {
-        animeLink.href = `detail.html?slug=${animeSlug}`;
-    } else {
-        animeLink.style.display = 'none';
+    if (animeLink) {
+        if (animeSlug) {
+            animeLink.href = `detail.html?slug=${animeSlug}`;
+        } else {
+            animeLink.style.display = 'none';
+        }
     }
     
     // Video player - set to default stream
     const videoPlayer = document.getElementById('video-player');
-    videoPlayer.src = episode.stream_url;
+    if (videoPlayer) {
+        videoPlayer.src = episode.stream_url;
+    }
     
     // Episode navigation
     setupEpisodeNavigation(episode);
@@ -98,6 +127,12 @@ function displayEpisode(episode) {
 function setupEpisodeNavigation(episode) {
     const prevBtn = document.getElementById('prev-episode');
     const nextBtn = document.getElementById('next-episode');
+    
+    // Check if navigation elements exist
+    if (!prevBtn || !nextBtn) {
+        console.log('Episode navigation elements not found, skipping navigation setup');
+        return;
+    }
     
     // Previous episode
     if (episode.has_previous_episode && episode.previous_episode) {
@@ -122,12 +157,24 @@ function setupEpisodeNavigation(episode) {
 
 // Display download links
 function displayDownloadLinks(downloadUrls) {
-    const mp4Container = document.getElementById('mp4-downloads');
+    console.log('=== displayDownloadLinks called ===');
+    console.log('downloadUrls:', downloadUrls);
+    
     const mkvContainer = document.getElementById('mkv-downloads');
+    const mp4Grid = document.getElementById('mp4-grid');
+    const mkvGrid = document.getElementById('mkv-grid');
+    
+    console.log('mkvContainer found:', !!mkvContainer);
+    console.log('mp4Grid found:', !!mp4Grid);
+    console.log('mkvGrid found:', !!mkvGrid);
+    
+    // Check if containers exist
+    if (!mkvContainer || !mp4Grid || !mkvGrid) {
+        console.log('Download containers not found, skipping download links setup');
+        return;
+    }
     
     // Clear existing content
-    const mp4Grid = mp4Container.querySelector('.download-grid');
-    const mkvGrid = mkvContainer.querySelector('.download-grid');
     mp4Grid.innerHTML = '';
     mkvGrid.innerHTML = '';
     
@@ -136,9 +183,42 @@ function displayDownloadLinks(downloadUrls) {
         return;
     }
     
+    // Debug: Log structure once
+    console.log('Download URLs structure:', downloadUrls);
+    console.log('Download URLs type:', typeof downloadUrls);
+    console.log('Download URLs keys:', downloadUrls ? Object.keys(downloadUrls) : 'null');
+    
+    // Process MP4 downloads - try different possible structures
+    let mp4Downloads = null;
+    let mkvDownloads = null;
+    
+    // Try different possible structures
+    if (downloadUrls.mp4 && Array.isArray(downloadUrls.mp4)) {
+        mp4Downloads = downloadUrls.mp4;
+    } else if (downloadUrls.downloads && downloadUrls.downloads.mp4) {
+        mp4Downloads = downloadUrls.downloads.mp4;
+    } else if (downloadUrls.download && downloadUrls.download.mp4) {
+        mp4Downloads = downloadUrls.download.mp4;
+    } else if (Array.isArray(downloadUrls)) {
+        // If downloadUrls is directly an array, treat as MP4
+        mp4Downloads = downloadUrls;
+    }
+    
+    // Try different possible structures for MKV
+    if (downloadUrls.mkv && Array.isArray(downloadUrls.mkv)) {
+        mkvDownloads = downloadUrls.mkv;
+    } else if (downloadUrls.downloads && downloadUrls.downloads.mkv) {
+        mkvDownloads = downloadUrls.downloads.mkv;
+    } else if (downloadUrls.download && downloadUrls.download.mkv) {
+        mkvDownloads = downloadUrls.download.mkv;
+    }
+    
+    console.log('MP4 downloads found:', mp4Downloads);
+    console.log('MKV downloads found:', mkvDownloads);
+    
     // Process MP4 downloads
-    if (downloadUrls.mp4 && downloadUrls.mp4.length > 0) {
-        downloadUrls.mp4.forEach(download => {
+    if (mp4Downloads && mp4Downloads.length > 0) {
+        mp4Downloads.forEach(download => {
             const resolutionDiv = createDownloadResolution(download);
             mp4Grid.appendChild(resolutionDiv);
         });
@@ -147,9 +227,9 @@ function displayDownloadLinks(downloadUrls) {
     }
     
     // Process MKV downloads
-    if (downloadUrls.mkv && downloadUrls.mkv.length > 0) {
+    if (mkvDownloads && mkvDownloads.length > 0) {
         mkvContainer.style.display = 'block';
-        downloadUrls.mkv.forEach(download => {
+        mkvDownloads.forEach(download => {
             const resolutionDiv = createDownloadResolution(download);
             mkvGrid.appendChild(resolutionDiv);
         });
@@ -202,23 +282,79 @@ function createDownloadCard(download, format) {
 
 // Create download resolution section
 function createDownloadResolution(download) {
+    console.log('Creating download resolution for:', download);
+    
     const resolutionDiv = document.createElement('div');
     resolutionDiv.className = 'download-resolution';
     
+    // Handle different resolution field names
+    const resolution = download.resolution || download.quality || download.size || 'Unknown';
+    
     const title = document.createElement('div');
     title.className = 'resolution-title';
-    title.innerHTML = `<span>📺</span> ${download.resolution}`;
+    title.innerHTML = `<span>📺</span> ${resolution}`;
     
     const linksContainer = document.createElement('div');
     linksContainer.className = 'download-links';
     
-    if (download.urls && download.urls.length > 0) {
-        download.urls.forEach(url => {
+    // Try different possible URL structures
+    let urls = null;
+    
+    if (download.urls && Array.isArray(download.urls)) {
+        urls = download.urls;
+    } else if (download.links && Array.isArray(download.links)) {
+        urls = download.links;
+    } else if (download.downloads && Array.isArray(download.downloads)) {
+        urls = download.downloads;
+    } else if (download.providers && Array.isArray(download.providers)) {
+        urls = download.providers;
+    }
+    
+    console.log('URLs found for resolution:', urls);
+    
+    if (urls && urls.length > 0) {
+        urls.forEach((urlItem, index) => {
+            let url, provider;
+            
+            // Handle different URL structures
+            if (typeof urlItem === 'string') {
+                url = urlItem;
+                provider = getProviderName(url);
+            } else if (typeof urlItem === 'object' && urlItem !== null) {
+                // Try different possible object structures
+                url = urlItem.url || urlItem.link || urlItem.href || urlItem.src || urlItem.download_url;
+                provider = urlItem.provider || urlItem.name || urlItem.title || urlItem.host || getProviderName(url);
+                
+                // If no URL found in object, skip
+                if (!url) {
+                    // Only log first few warnings to avoid spam
+                    if (index < 3) {
+                        console.warn(`No URL found in download object ${index}:`, urlItem);
+                    }
+                    return;
+                }
+            } else {
+                // Only log first few warnings to avoid spam
+                if (index < 3) {
+                    console.warn(`Invalid URL item type ${index}:`, typeof urlItem, urlItem);
+                }
+                return;
+            }
+            
+            // Validate final URL
+            if (!url || typeof url !== 'string' || !url.trim()) {
+                // Only log first few warnings to avoid spam
+                if (index < 3) {
+                    console.warn(`Invalid final URL ${index}:`, url);
+                }
+                return;
+            }
+            
             const link = document.createElement('a');
             link.href = url;
             link.target = '_blank';
             link.className = 'download-link';
-            link.textContent = getProviderName(url);
+            link.textContent = provider || getProviderName(url);
             linksContainer.appendChild(link);
         });
     } else {
@@ -236,6 +372,17 @@ function createDownloadResolution(download) {
 
 // Get provider name from URL
 function getProviderName(url) {
+    // Check if url is a string
+    if (typeof url !== 'string') {
+        console.warn('getProviderName received non-string parameter:', typeof url, url);
+        return 'Download';
+    }
+    
+    // Check if url is empty or invalid
+    if (!url || url.trim() === '') {
+        return 'Download';
+    }
+    
     const urlLower = url.toLowerCase();
     
     if (urlLower.includes('odfiles')) return 'ODFiles';
@@ -283,7 +430,7 @@ document.addEventListener('keydown', (e) => {
     // Left arrow - previous episode
     if (e.key === 'ArrowLeft') {
         const prevBtn = document.getElementById('prev-episode');
-        if (prevBtn.style.display !== 'none') {
+        if (prevBtn && prevBtn.style.display !== 'none') {
             prevBtn.click();
         }
     }
@@ -291,7 +438,7 @@ document.addEventListener('keydown', (e) => {
     // Right arrow - next episode
     if (e.key === 'ArrowRight') {
         const nextBtn = document.getElementById('next-episode');
-        if (nextBtn.style.display !== 'none') {
+        if (nextBtn && nextBtn.style.display !== 'none') {
             nextBtn.click();
         }
     }

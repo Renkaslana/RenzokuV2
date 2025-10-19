@@ -1,5 +1,6 @@
 // Search API Configuration
 const SEARCH_API_URL = 'https://www.sankavollerei.com/anime/search';
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
 
 // Get search query from URL parameters
 function getSearchQuery() {
@@ -24,19 +25,27 @@ async function fetchSearchResults(query) {
             try {
                 console.log('Trying URL:', url);
                 
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        'Accept': 'application/json, text/plain, */*',
-                        'Accept-Language': 'en-US,en;q=0.9',
-                        'Referer': 'https://www.sankavollerei.com/',
-                        'Cache-Control': 'no-cache',
-                        'Pragma': 'no-cache'
-                    },
-                    mode: 'cors',
-                    credentials: 'omit'
-                });
+                let response;
+                try {
+                    response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            'Accept': 'application/json, text/plain, */*',
+                            'Accept-Language': 'en-US,en;q=0.9',
+                            'Referer': 'https://www.sankavollerei.com/',
+                            'Cache-Control': 'no-cache',
+                            'Pragma': 'no-cache'
+                        },
+                        mode: 'cors',
+                        credentials: 'omit'
+                    });
+                } catch (corsError) {
+                    console.log('Direct API failed, trying CORS proxy...');
+                    // Use CORS proxy as fallback
+                    const proxyUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
+                    response = await fetch(proxyUrl);
+                }
                 
                 console.log('Response status:', response.status);
                 

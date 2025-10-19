@@ -6,11 +6,10 @@
     <title>Streaming Anime - Renzoku</title>
     <link rel="stylesheet" href="../styles/style.css">
     <link rel="stylesheet" href="../styles/episode.css">
-    <link rel="stylesheet" href="../styles/episode-improved.css">
 </head>
 <body>
     <!-- Header -->
-    <header class="episode-header-nav">
+    <header class="header">
         <div class="container">
             <div class="logo">
                 <h1><a href="index.html" style="color: white; text-decoration: none;">🎬 Renzoku</a></h1>
@@ -27,7 +26,14 @@
                 <div id="search-suggestions" class="search-suggestions"></div>
             </div>
             
-            <nav class="nav">
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" id="mobile-menu-btn">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            
+            <nav class="nav" id="nav-menu">
                 <a href="index.html" class="nav-link">Home</a>
                 <a href="index.html#ongoing" class="nav-link">Ongoing</a>
                 <a href="index.html#completed" class="nav-link">Completed</a>
@@ -65,6 +71,18 @@
                 </a>
             </div>
 
+            <!-- Episode Navigation -->
+            <div class="episode-nav">
+                <button id="prev-episode" class="nav-btn nav-prev" style="display: none;">
+                    <span class="nav-icon">⬅️</span>
+                    <span>Episode Sebelumnya</span>
+                </button>
+                <button id="next-episode" class="nav-btn nav-next" style="display: none;">
+                    <span>Episode Selanjutnya</span>
+                    <span class="nav-icon">➡️</span>
+                </button>
+            </div>
+
             <!-- Video Player Section -->
             <section class="player-section">
                 <div class="player-container">
@@ -76,7 +94,6 @@
                         allowfullscreen>
                     </iframe>
                 </div>
-                
             </section>
 
             
@@ -88,27 +105,25 @@
                     Download Episode
                 </h2>
                 
-                <div class="download-cards-container">
-                    <!-- MP4 Downloads -->
-                    <div id="mp4-downloads" class="download-card">
-                        <div class="download-card-header">
-                            <span class="format-icon">🎬</span>
-                            <h3 class="download-card-title">Format MP4</h3>
-                        </div>
-                        <div class="download-options" id="mp4-grid">
-                            <!-- Download options will be populated here -->
-                        </div>
+                <!-- MP4 Downloads -->
+                <div class="download-group">
+                    <h3 class="download-group-title">
+                        <span class="format-icon">🎬</span>
+                        Format MP4
+                    </h3>
+                    <div class="download-grid" id="mp4-grid">
+                        <!-- Download options will be populated here -->
                     </div>
+                </div>
 
-                    <!-- MKV Downloads -->
-                    <div id="mkv-downloads" class="download-card" style="display: none;">
-                        <div class="download-card-header">
-                            <span class="format-icon">🎬</span>
-                            <h3 class="download-card-title">Format MKV</h3>
-                        </div>
-                        <div class="download-options" id="mkv-grid">
-                            <!-- Download options will be populated here -->
-                        </div>
+                <!-- MKV Downloads -->
+                <div class="download-group" id="mkv-downloads" style="display: none;">
+                    <h3 class="download-group-title">
+                        <span class="format-icon">🎬</span>
+                        Format MKV
+                    </h3>
+                    <div class="download-grid" id="mkv-grid">
+                        <!-- Download options will be populated here -->
                     </div>
                 </div>
             </section>
@@ -135,24 +150,10 @@
         </div>
     </footer>
 
-    <script src="../scripts/episode-optimized.js"></script>
+    <script src="../scripts/script.js"></script>
+    <script src="../scripts/episode.js"></script>
     <script src="../scripts/light-search.js"></script>
-    <script src="../scripts/episode-debug.js"></script>
     
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('../sw-episode.js')
-                    .then((registration) => {
-                        console.log('Service Worker registered:', registration);
-                    })
-                    .catch((error) => {
-                        console.log('Service Worker registration failed:', error);
-                    });
-            });
-        }
-    </script>
 </body>
 </html>
 
