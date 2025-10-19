@@ -7,6 +7,8 @@
     justify-content: center;
     position: relative;
     overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .hero-section::before {
@@ -26,6 +28,8 @@
     position: relative;
     max-width: 800px;
     padding: 0 20px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .hero-icon {
@@ -142,6 +146,18 @@
 }
 
 @media (max-width: 768px) {
+    .hero-section {
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        margin-right: calc(-50vw + 50%);
+    }
+    
+    .hero-content {
+        max-width: none;
+        width: 100%;
+        padding: 0 15px;
+    }
+    
     .hero-title {
         font-size: 3rem;
     }
@@ -173,6 +189,16 @@
 }
 
 @media (max-width: 480px) {
+    .hero-section {
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        margin-right: calc(-50vw + 50%);
+    }
+    
+    .hero-content {
+        padding: 0 12px;
+    }
+    
     .hero-title {
         font-size: 2.5rem;
     }
@@ -192,8 +218,41 @@
         font-size: 1rem;
         padding: 0 10px;
     }
+}
+
+@media (max-width: 360px) {
+    .hero-section {
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        margin-right: calc(-50vw + 50%);
+    }
     
     .hero-content {
-        padding: 0 15px;
+        padding: 0 8px;
+    }
+    
+    .hero-title {
+        font-size: 2.2rem;
+    }
+    
+    .hero-icon {
+        width: 120px;
+        height: 120px;
+        border-radius: 22px;
+        margin-bottom: 25px;
+    }
+    
+    .hero-icon-symbol {
+        border-radius: 22px;
+    }
+    
+    .hero-subtitle {
+        font-size: 0.9rem;
+        padding: 0 5px;
+    }
+    
+    .hero-btn {
+        padding: 14px 24px;
+        font-size: 1rem;
     }
 }
