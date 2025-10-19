@@ -475,6 +475,16 @@ function hideSuggestions() {
     container.style.display = 'none';
 }
 
+// Handle retry button
+document.addEventListener('DOMContentLoaded', () => {
+    const retryBtn = document.getElementById('btn-retry-search');
+    if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+            location.reload();
+        });
+    }
+});
+
 // Initialize based on current page
 if (window.location.pathname.includes('search.html')) {
     // This is the search results page

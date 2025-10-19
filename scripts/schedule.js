@@ -220,5 +220,15 @@ async function initSchedule() {
     }
 }
 
+// Handle retry button
+document.addEventListener('DOMContentLoaded', () => {
+    const retryBtn = document.getElementById('btn-retry-schedule');
+    if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+            location.reload();
+        });
+    }
+});
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', initSchedule);

@@ -62,6 +62,12 @@ function createAnimeCard(anime, type = 'ongoing') {
 // Display ongoing anime
 function displayOngoingAnime(animeList) {
     const container = document.getElementById('ongoing-container');
+    
+    if (!container) {
+        console.error('ongoing-container element not found');
+        return;
+    }
+    
     container.innerHTML = '';
     
     if (!animeList || animeList.length === 0) {
@@ -78,6 +84,12 @@ function displayOngoingAnime(animeList) {
 // Display completed anime
 function displayCompletedAnime(animeList) {
     const container = document.getElementById('completed-container');
+    
+    if (!container) {
+        console.error('completed-container element not found');
+        return;
+    }
+    
     container.innerHTML = '';
     
     if (!animeList || animeList.length === 0) {
@@ -94,41 +106,140 @@ function displayCompletedAnime(animeList) {
 // Show error message
 function showError(containerId, message) {
     const container = document.getElementById(containerId);
+    
+    if (!container) {
+        console.error(`Container ${containerId} not found`);
+        return;
+    }
+    
     container.innerHTML = `
         <div class="error-message">
             <p>❌ ${message}</p>
-            <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer;">
+            <button id="retry-btn-${containerId}" style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer;">
                 Coba Lagi
             </button>
         </div>
     `;
+    
+    // Add event listener for retry button
+    const retryBtn = document.getElementById(`retry-btn-${containerId}`);
+    if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+            location.reload();
+        });
+    }
 }
 
-// Initialize the application
+// Initialize the application with better error handling
 async function init() {
     try {
-        // Fetch data from API
-        const data = await fetchAnimeData();
+        console.log('Starting homepage initialization...');
+        
+        // Wait for DOM to be fully loaded
+        if (document.readyState !== 'complete') {
+            console.log('Waiting for DOM to be complete...');
+            await new Promise(resolve => {
+                if (document.readyState === 'complete') {
+                    resolve();
+                } else {
+                    window.addEventListener('load', resolve);
+                }
+            });
+        }
+        
+        // Verify containers exist
+        const ongoingContainer = document.getElementById('ongoing-container');
+        const completedContainer = document.getElementById('completed-container');
+        
+        if (!ongoingContainer) {
+            console.error('ongoing-container not found in DOM');
+            return;
+        }
+        
+        if (!completedContainer) {
+            console.error('completed-container not found in DOM');
+            return;
+        }
+        
+        console.log('Containers found, proceeding with initialization...');
+        
+        // Show loading states
+        showLoadingState('ongoing-container');
+        showLoadingState('completed-container');
+        
+        // Fetch data from API with timeout
+        const data = await Promise.race([
+            fetchAnimeData(),
+            new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Request timeout')), 15000)
+            )
+        ]);
+        
+        console.log('Homepage data loaded:', data);
         
         // Display ongoing anime
-        if (data.ongoing_anime) {
+        if (data.ongoing_anime && data.ongoing_anime.length > 0) {
             displayOngoingAnime(data.ongoing_anime);
         } else {
-            showError('ongoing-container', 'Data anime ongoing tidak ditemukan');
+            showEmptyState('ongoing-container', 'Belum ada anime ongoing');
         }
         
         // Display completed anime
-        if (data.complete_anime) {
+        if (data.complete_anime && data.complete_anime.length > 0) {
             displayCompletedAnime(data.complete_anime);
         } else {
-            showError('completed-container', 'Data anime selesai tidak ditemukan');
+            showEmptyState('completed-container', 'Belum ada anime completed');
         }
         
     } catch (error) {
-        // Show error in both containers
-        showError('ongoing-container', 'Gagal memuat data anime. Periksa koneksi internet Anda.');
-        showError('completed-container', 'Gagal memuat data anime. Periksa koneksi internet Anda.');
+        console.error('Homepage init error:', error);
+        
+        // Show specific error messages
+        if (error.message.includes('timeout')) {
+            showError('ongoing-container', 'Koneksi terlalu lambat. Silakan refresh halaman.');
+            showError('completed-container', 'Koneksi terlalu lambat. Silakan refresh halaman.');
+        } else if (error.message.includes('AI Detector')) {
+            showError('ongoing-container', 'Server sedang dalam mode perlindungan. Tunggu beberapa menit.');
+            showError('completed-container', 'Server sedang dalam mode perlindungan. Tunggu beberapa menit.');
+        } else {
+            showError('ongoing-container', 'Gagal memuat data anime. Periksa koneksi internet Anda.');
+            showError('completed-container', 'Gagal memuat data anime. Periksa koneksi internet Anda.');
+        }
     }
+}
+
+// Show loading state for containers
+function showLoadingState(containerId) {
+    const container = document.getElementById(containerId);
+    
+    if (!container) {
+        console.error(`Container ${containerId} not found`);
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>Memuat data...</p>
+        </div>
+    `;
+}
+
+// Show empty state for containers
+function showEmptyState(containerId, message) {
+    const container = document.getElementById(containerId);
+    
+    if (!container) {
+        console.error(`Container ${containerId} not found`);
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="empty-state">
+            <div class="empty-icon">📺</div>
+            <p>${message}</p>
+        </div>
+    `;
 }
 
 // Smooth scroll for navigation (only for internal links)
@@ -173,6 +284,44 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize mobile menu
     initMobileMenu();
+    
+    // Handle hero icon image loading
+    const heroIcon = document.getElementById('hero-icon-img');
+    const heroFallback = document.getElementById('hero-icon-fallback');
+    
+    if (heroIcon && heroFallback) {
+        heroIcon.addEventListener('load', () => {
+            console.log('Kanade image loaded successfully');
+        });
+        
+        heroIcon.addEventListener('error', () => {
+            console.log('Error loading kanade.jpg');
+            heroIcon.style.display = 'none';
+            heroFallback.style.display = 'block';
+        });
+    }
+    
+    // Handle hero buttons
+    const btnStartWatching = document.getElementById('btn-start-watching');
+    const btnSearch = document.getElementById('btn-search');
+    
+    if (btnStartWatching) {
+        btnStartWatching.addEventListener('click', () => {
+            const ongoingContainer = document.getElementById('ongoing-container');
+            if (ongoingContainer) {
+                ongoingContainer.scrollIntoView({behavior: 'smooth'});
+            }
+        });
+    }
+    
+    if (btnSearch) {
+        btnSearch.addEventListener('click', () => {
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.focus();
+            }
+        });
+    }
 });
 
 // Mobile Menu Toggle

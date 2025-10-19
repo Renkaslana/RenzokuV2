@@ -413,6 +413,8 @@ function createRecommendationCard(anime) {
 
 // Initialize the application
 async function init() {
+    // Setup episode preloading
+    setupEpisodePreloading();
     console.log('=== DETAIL PAGE INIT START ===');
     const slug = getAnimeSlug();
     
@@ -484,6 +486,112 @@ async function init() {
     
     console.log('=== DETAIL PAGE INIT END ===');
 }
+
+// Setup episode preloading for instant episode access
+function setupEpisodePreloading() {
+    // Preload episodes when user hovers over episode links
+    document.addEventListener('mouseover', (e) => {
+        const link = e.target.closest('a[href*="episode.html"]');
+        if (link) {
+            const href = link.getAttribute('href');
+            const slug = extractEpisodeSlugFromHref(href);
+            if (slug) {
+                // Preload episode data
+                preloadEpisodeFromDetail(slug);
+            }
+        }
+    });
+    
+    // Preload episodes when user clicks on episode links
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a[href*="episode.html"]');
+        if (link) {
+            const href = link.getAttribute('href');
+            const slug = extractEpisodeSlugFromHref(href);
+            if (slug) {
+                // Immediate preload for clicked episode
+                preloadEpisodeFromDetail(slug, true);
+            }
+        }
+    });
+}
+
+// Extract episode slug from href
+function extractEpisodeSlugFromHref(href) {
+    if (!href) return null;
+    const match = href.match(/slug=([^&]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
+// Preload episode from detail page
+async function preloadEpisodeFromDetail(slug, priority = false) {
+    if (!slug) return;
+    
+    try {
+        // Check if already cached
+        if (window.EPISODE_CACHE && window.EPISODE_CACHE.has(slug)) {
+            console.log('Episode already cached:', slug);
+            return;
+        }
+        
+        console.log(`${priority ? 'Priority' : 'Background'} preloading episode:`, slug);
+        
+        // Use the same API endpoints as episode.js
+        const endpoints = [
+            'https://www.sankavollerei.com/anime/episode',
+            'https://api.sankavollerei.com/episode',
+            'https://backup.sankavollerei.com/anime/episode'
+        ];
+        
+        for (const baseUrl of endpoints) {
+            try {
+                const response = await fetch(`${baseUrl}/${slug}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'Referer': 'https://www.sankavollerei.com/',
+                        'Origin': 'https://www.sankavollerei.com'
+                    },
+                    timeout: priority ? 5000 : 10000
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.status === 'success' && result.data) {
+                        // Store in global cache for episode.js to use
+                        if (!window.EPISODE_CACHE) {
+                            window.EPISODE_CACHE = new Map();
+                        }
+                        window.EPISODE_CACHE.set(slug, {
+                            data: result.data,
+                            timestamp: Date.now()
+                        });
+                        console.log('Episode preloaded successfully:', slug);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.log(`Preload failed for ${baseUrl}/${slug}:`, error.message);
+                continue;
+            }
+        }
+        
+        console.log('All preload attempts failed for:', slug);
+    } catch (error) {
+        console.log('Preload error for:', slug, error.message);
+    }
+}
+
+// Handle retry button
+document.addEventListener('DOMContentLoaded', () => {
+    const retryBtn = document.getElementById('btn-retry-detail');
+    if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+            location.reload();
+        });
+    }
+});
 
 // Start the application when DOM is ready
 if (document.readyState === 'loading') {

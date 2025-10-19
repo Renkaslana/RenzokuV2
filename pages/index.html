@@ -46,20 +46,18 @@
     <section class="hero-section">
         <div class="hero-content">
             <div class="hero-icon">
-                <img src="../kanade.jpg" alt="Kanade" class="hero-icon-symbol" 
-                     onload="console.log('Kanade image loaded successfully');"
-                     onerror="console.log('Error loading kanade.jpg from:', this.src); this.style.display='none'; this.nextElementSibling.style.display='block';">
-                <span class="hero-icon-fallback" style="display:none; font-size: 2.5rem; color: white;">🎬</span>
+                <img src="../kanade.jpg" alt="Kanade" class="hero-icon-symbol" id="hero-icon-img">
+                <span class="hero-icon-fallback" style="display:none; font-size: 2.5rem; color: white;" id="hero-icon-fallback">🎬</span>
             </div>
             <h1 class="hero-title">Renzoku</h1>
             <p class="hero-subtitle">
                 Website Anime buatan <span class="highlight">Fahren</span>, Nikmati koleksi anime terbaru dan terlengkap
             </p>
             <div class="hero-buttons">
-                <button class="hero-btn primary" onclick="document.getElementById('ongoing-container').scrollIntoView({behavior: 'smooth'})">
+                <button class="hero-btn primary" id="btn-start-watching">
                     Mulai Menonton →
                 </button>
-                <button class="hero-btn secondary" onclick="document.getElementById('search-input').focus()">
+<button class="hero-btn secondary" id="btn-search">
                     🔍 Cari Anime
                 </button>
             </div>
