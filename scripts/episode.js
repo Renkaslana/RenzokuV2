@@ -415,9 +415,9 @@ function showContent() {
     
     // Small delay to show 100% completion
     setTimeout(() => {
-        document.getElementById('loading-state').style.display = 'none';
-        document.getElementById('error-state').style.display = 'none';
-        document.getElementById('episode-content').style.display = 'block';
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('error-state').style.display = 'none';
+    document.getElementById('episode-content').style.display = 'block';
     }, 300);
 }
 
@@ -534,10 +534,10 @@ function displayEpisode(episode) {
     const animeSlug = extractAnimeSlug(episode.anime.slug);
     const animeLink = document.getElementById('anime-link');
     if (animeLink) {
-        if (animeSlug) {
-            animeLink.href = `detail.html?slug=${animeSlug}`;
-        } else {
-            animeLink.style.display = 'none';
+    if (animeSlug) {
+        animeLink.href = `detail.html?slug=${animeSlug}`;
+    } else {
+        animeLink.style.display = 'none';
         }
     }
     
