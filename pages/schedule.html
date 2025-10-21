@@ -9,39 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="logo">
-                <h1><a href="index.html" style="color: white; text-decoration: none;">🎬 Renzoku</a></h1>
-            </div>
-            
-            <!-- Search Bar -->
-            <div class="search-container">
-                <div class="search-box">
-                    <input type="text" id="search-input" placeholder="Cari anime..." class="search-input">
-                    <button id="search-btn" class="search-btn">
-                        <span class="search-icon">🔍</span>
-                    </button>
-                </div>
-                <div id="search-suggestions" class="search-suggestions"></div>
-            </div>
-            
-            <!-- Mobile Menu Button -->
-            <button class="mobile-menu-btn" id="mobile-menu-btn">
-                <span class="hamburger-line"></span>
-                <span class="hamburger-line"></span>
-                <span class="hamburger-line"></span>
-            </button>
-            
-            <nav class="nav" id="nav-menu">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="index.html#ongoing" class="nav-link">Ongoing</a>
-                <a href="index.html#completed" class="nav-link">Completed</a>
-                <a href="schedule.html" class="nav-link active">📅 Schedule</a>
-            </nav>
-        </div>
-    </header>
+    <!-- Header Component - Loaded dynamically -->
+    <div id="header-placeholder"></div>
 
     <!-- Schedule Header -->
     <section class="schedule-header">
@@ -97,44 +66,11 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-info">
-                    <h3>Renzoku</h3>
-                    <p class="development-notice">
-                        🚧 Website ini masih dalam tahap pengembangan dan masih banyak bug yang perlu diperbaiki.
-                        <br>Terima kasih atas kesabaran dan dukungan Anda! 🙏
-                    </p>
-                </div>
-                
-                <div class="footer-contact">
-                    <h4>Hubungi Kami</h4>
-                    <div class="social-links">
-                        <a href="https://www.facebook.com/profile.php?id=61555138500060" target="_blank" class="social-link facebook" title="Facebook">
-                            <i class="fab fa-facebook"></i>
-                            <span>Facebook</span>
-                        </a>
-                        <a href="https://wa.me/6289604054315" target="_blank" class="social-link whatsapp" title="WhatsApp">
-                            <i class="fab fa-whatsapp"></i>
-                            <span>WhatsApp</span>
-                        </a>
-                        <a href="https://github.com/Renkaslana" target="_blank" class="social-link github" title="GitHub">
-                            <i class="fab fa-github"></i>
-                            <span>GitHub</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; 2025 Renzoku. Dibuat dengan ❤️ oleh Fahren</p>
-                
-            </div>
-        </div>
-    </footer>
+    <!-- Footer Component - Loaded dynamically -->
+    <div id="footer-placeholder"></div>
 
+    <!-- Load components first, then other scripts -->
+    <script src="../scripts/components-loader.js"></script>
     <script src="../scripts/schedule.js"></script>
     <script src="../scripts/safe-search.js"></script>
     <script src="../scripts/script.js"></script>

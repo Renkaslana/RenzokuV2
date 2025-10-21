@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime Explorer - Renzoku</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/explorer.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header Component - Loaded dynamically -->
+    <div id="header-placeholder"></div>
+
+    <!-- Explorer Header -->
+    <section class="explorer-header">
+        <div class="container">
+            <div class="explorer-info">
+                <h1 class="explorer-title">🚀 Anime Explorer</h1>
+                <p class="explorer-subtitle">Jelajahi ribuan anime dengan cara yang berbeda</p>
+                
+                <!-- Quick Stats -->
+                <div class="explorer-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="total-anime">-</span>
+                        <span class="stat-label">Total Anime</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="total-years">-</span>
+                        <span class="stat-label">Tahun</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tab Navigation -->
+    <section class="tab-navigation">
+        <div class="container">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="popular">
+                    <span class="tab-icon">🏆</span>
+                    <span class="tab-label">Popular</span>
+                </button>
+                <button class="tab-btn" data-tab="alphabetical">
+                    <span class="tab-icon">🔤</span>
+                    <span class="tab-label">A-Z</span>
+                </button>
+                <button class="tab-btn" data-tab="years">
+                    <span class="tab-icon">📅</span>
+                    <span class="tab-label">Years</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tab Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Popular Tab -->
+            <div class="tab-panel active" id="popular-panel">
+                <div class="tab-header">
+                    <h2>🏆 Popular Anime</h2>
+                    <p>Top 10 anime populer berdasarkan rating dan popularitas</p>
+                </div>
+                
+                <!-- Popular Ranking List -->
+                <div class="popular-ranking" id="popular-ranking">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Alphabetical Tab -->
+            <div class="tab-panel" id="alphabetical-panel">
+                <div class="tab-header">
+                    <h2>🔤 Alphabetical Browse</h2>
+                    <p>Jelajahi anime berdasarkan urutan alfabet</p>
+                </div>
+                
+                <div class="alphabet-filter">
+                    <button class="filter-btn active" data-letter="all">All</button>
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                
+                <div class="alphabetical-search-container">
+                    <input type="text" id="alphabetical-search" placeholder="Cari dalam A-Z..." class="search-input">
+                </div>
+                
+                <div class="alphabetical-grid" id="alphabetical-grid">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                
+                <div class="pagination" id="alphabetical-pagination">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+
+            <!-- Years Tab -->
+            <div class="tab-panel" id="years-panel">
+                <div class="tab-header">
+                    <h2>📅 Browse by Years</h2>
+                    <p>Jelajahi anime berdasarkan tahun rilis</p>
+                </div>
+                
+                <div class="year-navigation">
+                    <button class="year-btn active" data-year="all">All Years</button>
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                
+                <div class="year-stats" id="year-stats">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                
+                <div class="year-content" id="year-content">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer Component - Loaded dynamically -->
+    <div id="footer-placeholder"></div>
+
+    <!-- Load components first, then other scripts -->
+    <script src="../scripts/components-loader.js"></script>
+    <script src="../scripts/explorer.js"></script>
+</body>
+</html>

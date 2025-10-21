@@ -1,0 +1,1324 @@
+/* ============================================
+   EXPLORER PAGE STYLES
+   Multi-tab anime explorer interface
+   ============================================ */
+
+/* Explorer Header */
+.explorer-header {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    padding: 3rem 0;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.explorer-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.explorer-subtitle {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.explorer-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+    background: var(--card-bg);
+    border-radius: 12px;
+    min-width: 120px;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Tab Navigation */
+.tab-navigation {
+    background: var(--card-bg);
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.tab-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-secondary);
+    min-width: 100px;
+}
+
+.tab-btn:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+}
+
+.tab-btn.active {
+    background: var(--gradient);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+}
+
+.tab-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.tab-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Tab Panels */
+.tab-panel {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.tab-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.tab-header h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.tab-header p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+/* Trending Tab Styles */
+.trending-stats {
+    margin-bottom: 2rem;
+}
+
+.stats-card {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.stats-card h3 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.stats-card p {
+    color: var(--text-secondary);
+}
+
+.top-trending {
+    margin-bottom: 2rem;
+}
+
+.top-trending h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.top-trending-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.trending-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.trending-item:hover {
+    background: rgba(99, 102, 241, 0.1);
+    transform: translateX(5px);
+}
+
+.trending-rank {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-right: 1rem;
+    min-width: 30px;
+}
+
+.trending-title {
+    flex: 1;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.trending-trend {
+    font-size: 0.9rem;
+    color: var(--success);
+    font-weight: 600;
+}
+
+/* Alphabetical Tab Styles */
+.alphabet-filter {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Alphabetical search container - specific to explorer page */
+.alphabetical-search-container {
+    max-width: 400px;
+    margin: 0 auto 2rem;
+}
+
+.alphabetical-search-container input {
+    width: 100%;
+    padding: 1rem;
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.alphabetical-search-container input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Grid Layouts */
+.trending-grid,
+.alphabetical-grid,
+.genre-anime-grid,
+.year-content,
+.random-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.anime-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.anime-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.anime-poster-placeholder {
+    width: 100%;
+    height: 120px;
+    background: var(--gradient);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.anime-poster-placeholder::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.anime-letter {
+    font-size: 2rem;
+    font-weight: bold;
+    color: white;
+    z-index: 1;
+}
+
+.anime-title {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+    font-weight: 600;
+}
+
+.anime-id {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+
+/* Years Tab Styles */
+.year-navigation {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.year-btn {
+    padding: 0.75rem 1.5rem;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.year-btn:hover,
+.year-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.year-stats {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.year-stats h3 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.year-stats p {
+    color: var(--text-secondary);
+}
+
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+}
+
+.pagination button {
+    padding: 0.5rem 1rem;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.pagination button:hover,
+.pagination button.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Loading States */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 1rem;
+}
+
+/* Error States */
+.error-message {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    background: var(--card-bg);
+    border-radius: 12px;
+    margin: 2rem 0;
+}
+
+
+
+
+/* Popular Ranking Styles - Modern & Glossy Design */
+.popular-ranking {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    position: relative;
+}
+
+/* Background Pattern for Visual Appeal */
+.popular-ranking::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    right: -50px;
+    bottom: -50px;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(251, 191, 36, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.02) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.ranking-card {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 1.8rem;
+    margin-bottom: 1.8rem;
+    cursor: pointer;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Subtle Animation for Cards */
+.ranking-card:nth-child(odd) {
+    animation: subtleSlideInLeft 0.6s ease-out;
+}
+
+.ranking-card:nth-child(even) {
+    animation: subtleSlideInRight 0.6s ease-out;
+}
+
+@keyframes subtleSlideInLeft {
+    0% {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes subtleSlideInRight {
+    0% {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.ranking-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(99, 102, 241, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.ranking-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 40px rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.4);
+}
+
+.ranking-card:hover::before {
+    opacity: 1;
+}
+
+/* Top 3 Special Effects */
+.ranking-card:nth-child(1),
+.ranking-card:nth-child(2),
+.ranking-card:nth-child(3) {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+    border-width: 1.5px;
+    position: relative;
+}
+
+/* Special Crown Icon for #1 */
+.ranking-card:nth-child(1)::after {
+    content: '👑';
+    position: absolute;
+    top: -8px;
+    right: 20px;
+    font-size: 1.2rem;
+    opacity: 0.8;
+    animation: gentleFloat 3s ease-in-out infinite;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes gentleFloat {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+/* Special Star Icons for #2 and #3 */
+.ranking-card:nth-child(2)::after {
+    content: '✨';
+    position: absolute;
+    top: -8px;
+    right: 20px;
+    font-size: 1rem;
+    opacity: 0.8;
+    animation: gentleFloat 3s ease-in-out infinite 0.5s;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.ranking-card:nth-child(3)::after {
+    content: '⭐';
+    position: absolute;
+    top: -8px;
+    right: 20px;
+    font-size: 1rem;
+    opacity: 0.8;
+    animation: gentleFloat 3s ease-in-out infinite 1s;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.ranking-card:nth-child(1) {
+    border-color: rgba(255, 215, 0, 0.3);
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.15), 0 0 30px rgba(255, 215, 0, 0.08);
+}
+
+.ranking-card:nth-child(1):hover {
+    box-shadow: 0 12px 40px rgba(255, 215, 0, 0.3), 0 0 50px rgba(255, 215, 0, 0.15);
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.ranking-card:nth-child(2) {
+    border-color: rgba(192, 192, 192, 0.3);
+    box-shadow: 0 4px 20px rgba(192, 192, 192, 0.15), 0 0 30px rgba(192, 192, 192, 0.08);
+}
+
+.ranking-card:nth-child(2):hover {
+    box-shadow: 0 12px 40px rgba(192, 192, 192, 0.3), 0 0 50px rgba(192, 192, 192, 0.15);
+    border-color: rgba(192, 192, 192, 0.5);
+}
+
+.ranking-card:nth-child(3) {
+    border-color: rgba(205, 127, 50, 0.3);
+    box-shadow: 0 4px 20px rgba(205, 127, 50, 0.15), 0 0 30px rgba(205, 127, 50, 0.08);
+}
+
+.ranking-card:nth-child(3):hover {
+    box-shadow: 0 12px 40px rgba(205, 127, 50, 0.3), 0 0 50px rgba(205, 127, 50, 0.15);
+    border-color: rgba(205, 127, 50, 0.5);
+}
+
+/* Medal Badge positioned at top-left of cover image */
+.ranking-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    transition: all 0.3s ease;
+    min-width: 32px;
+    justify-content: center;
+}
+
+.ranking-card:hover .ranking-badge {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+/* Poster with Enhanced Modern Frame */
+.ranking-poster {
+    width: 140px;
+    height: 200px;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-right: 2rem;
+    position: relative;
+    flex-shrink: 0;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.15);
+    border: 3px solid rgba(255, 255, 255, 0.15);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ranking-card:hover .ranking-poster {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(99, 102, 241, 0.3);
+    border-color: rgba(99, 102, 241, 0.5);
+    transform: translateY(-4px) rotateY(5deg);
+}
+
+.ranking-poster .anime-cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ranking-card:hover .ranking-poster .anime-cover {
+    transform: scale(1.15) rotate(2deg);
+}
+
+/* Modern Placeholder with Glossy Effect */
+.ranking-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.ranking-placeholder::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(
+        120deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.15) 50%,
+        transparent 100%
+    );
+    animation: shimmer 3s infinite;
+    z-index: 1;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.ranking-placeholder .anime-letter {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 255, 255, 0.2);
+    z-index: 2;
+    margin-bottom: 0.5rem;
+    letter-spacing: 2px;
+}
+
+.ranking-placeholder .anime-icon {
+    font-size: 1.8rem;
+    z-index: 2;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+/* Enhanced Info Section */
+.ranking-info {
+    flex: 1;
+    padding-right: 1.5rem;
+}
+
+.ranking-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 0.8rem;
+    line-height: 1.2;
+    letter-spacing: -0.8px;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: all 0.4s ease;
+}
+
+.ranking-card:hover .ranking-title {
+    color: #e0e7ff;
+    text-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+}
+
+.ranking-japanese {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 1.2rem;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+
+/* Enhanced Stats Badges */
+.ranking-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+}
+
+.ranking-stats span {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+    backdrop-filter: blur(15px);
+    color: rgba(255, 255, 255, 0.95);
+    padding: 0.5rem 1.2rem;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.ranking-stats span::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+}
+
+.ranking-stats span:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.ranking-stats span:hover::before {
+    left: 100%;
+}
+
+.ranking-stats .rating {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+    font-weight: 800;
+}
+
+.ranking-stats .rating:hover {
+    box-shadow: 0 10px 30px rgba(251, 191, 36, 0.6);
+    transform: translateY(-4px) scale(1.08);
+}
+
+.ranking-stats .year {
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.25) 0%, rgba(16, 185, 129, 0.25) 100%);
+    color: #6ee7b7;
+    border-color: rgba(52, 211, 153, 0.4);
+}
+
+.ranking-stats .status {
+    background: linear-gradient(135deg, rgba(96, 165, 250, 0.25) 0%, rgba(59, 130, 246, 0.25) 100%);
+    color: #93c5fd;
+    border-color: rgba(96, 165, 250, 0.4);
+}
+
+.ranking-genre {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1rem;
+    line-height: 1.6;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* Optimized Medal Badges for Top 3 - Compact Design */
+.ranking-card:nth-child(1) .ranking-badge {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.5), 0 0 15px rgba(251, 191, 36, 0.2);
+}
+
+.ranking-card:nth-child(1) .ranking-badge::before {
+    content: '🥇';
+    margin-right: 0.2rem;
+    font-size: 0.8rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.ranking-card:nth-child(2) .ranking-badge {
+    background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 100%);
+    box-shadow: 0 2px 8px rgba(192, 192, 192, 0.5), 0 0 15px rgba(192, 192, 192, 0.2);
+}
+
+.ranking-card:nth-child(2) .ranking-badge::before {
+    content: '🥈';
+    margin-right: 0.2rem;
+    font-size: 0.8rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.ranking-card:nth-child(3) .ranking-badge {
+    background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+    box-shadow: 0 2px 8px rgba(251, 146, 60, 0.5), 0 0 15px rgba(251, 146, 60, 0.2);
+}
+
+.ranking-card:nth-child(3) .ranking-badge::before {
+    content: '🥉';
+    margin-right: 0.2rem;
+    font-size: 0.8rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* Regular number badges for 4-10 */
+.ranking-card:nth-child(n+4) .ranking-badge {
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.8) 0%, rgba(75, 85, 99, 0.8) 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .explorer-title {
+        font-size: 2rem;
+    }
+    
+    .explorer-stats {
+        gap: 1rem;
+    }
+    
+    .stat-item {
+        min-width: 100px;
+        padding: 0.8rem;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .tab-navigation {
+        padding: 0.8rem 0;
+    }
+    
+    .tab-buttons {
+        gap: 0.3rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .tab-btn {
+        padding: 0.8rem 1rem;
+        min-width: 80px;
+        flex: 1;
+        max-width: 120px;
+    }
+    
+    .tab-icon {
+        font-size: 1.2rem;
+    }
+    
+    .tab-label {
+        font-size: 0.8rem;
+    }
+    
+    /* Enhanced Mobile Layout - Vertical Cards */
+    .ranking-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-radius: 24px;
+    }
+    
+    .ranking-badge {
+        top: 8px;
+        left: 8px;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+    }
+    
+    .ranking-badge::before {
+        font-size: 0.9rem;
+        margin-right: 0.3rem;
+    }
+    
+    /* Hide decorative icons on mobile */
+    .ranking-card:nth-child(1)::after,
+    .ranking-card:nth-child(2)::after,
+    .ranking-card:nth-child(3)::after {
+        display: none;
+    }
+    
+    .ranking-poster {
+        width: 160px;
+        height: 220px;
+        margin-right: 0;
+        margin-bottom: 1.5rem;
+        border-radius: 20px;
+    }
+    
+    .ranking-info {
+        padding-right: 0;
+    }
+    
+    .ranking-title {
+        font-size: 1.5rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    .ranking-japanese {
+        font-size: 1rem;
+        margin-bottom: 1.2rem;
+    }
+    
+    .ranking-stats {
+        justify-content: center;
+        gap: 0.8rem;
+        margin-bottom: 1.2rem;
+    }
+    
+    .ranking-stats span {
+        font-size: 0.85rem;
+        padding: 0.4rem 1rem;
+    }
+    
+    .ranking-genre {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .explorer-header {
+        padding: 2rem 0;
+    }
+    
+    .explorer-title {
+        font-size: 1.8rem;
+    }
+    
+    .explorer-subtitle {
+        font-size: 1rem;
+    }
+    
+    .tab-navigation {
+        padding: 0.5rem 0;
+    }
+    
+    .tab-buttons {
+        gap: 0.2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .tab-btn {
+        padding: 0.6rem 0.8rem;
+        min-width: 70px;
+        flex: 1;
+        max-width: 100px;
+    }
+    
+    .tab-icon {
+        font-size: 1rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    .tab-label {
+        font-size: 0.7rem;
+    }
+    
+    /* Compact Mobile Layout */
+    .ranking-card {
+        padding: 1.2rem;
+        margin-bottom: 1.2rem;
+        border-radius: 20px;
+    }
+    
+    .ranking-badge {
+        top: 6px;
+        left: 6px;
+        font-size: 0.75rem;
+        padding: 0.3rem 0.6rem;
+    }
+    
+    .ranking-badge::before {
+        font-size: 0.8rem;
+        margin-right: 0.25rem;
+    }
+    
+    .ranking-poster {
+        width: 140px;
+        height: 190px;
+        margin-bottom: 1.2rem;
+    }
+    
+    .ranking-title {
+        font-size: 1.3rem;
+    }
+    
+    .ranking-japanese {
+        font-size: 0.9rem;
+    }
+    
+    .ranking-stats {
+        gap: 0.6rem;
+    }
+    
+    .ranking-stats span {
+        font-size: 0.8rem;
+        padding: 0.35rem 0.8rem;
+    }
+    
+    .ranking-genre {
+        font-size: 0.85rem;
+    }
+    
+    .trending-grid,
+    .alphabetical-grid,
+    .year-content {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.8rem;
+    }
+    
+    .anime-card {
+        padding: 0.8rem;
+    }
+    
+    .anime-poster-placeholder {
+        height: 100px;
+    }
+    
+    .anime-letter {
+        font-size: 1.5rem;
+    }
+    
+    .anime-title {
+        font-size: 0.8rem;
+    }
+    
+    .anime-id {
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .explorer-header {
+        padding: 1.5rem 0;
+    }
+    
+    .explorer-title {
+        font-size: 1.6rem;
+    }
+    
+    .explorer-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .explorer-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .stat-item {
+        min-width: 80px;
+        padding: 0.6rem;
+    }
+    
+    .stat-number {
+        font-size: 1.3rem;
+    }
+    
+    .tab-navigation {
+        padding: 0.3rem 0;
+    }
+    
+    .tab-buttons {
+        gap: 0.1rem;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .tab-btn {
+        padding: 0.5rem 0.6rem;
+        min-width: 60px;
+        max-width: 80px;
+        width: 100%;
+    }
+    
+    .tab-icon {
+        font-size: 0.9rem;
+    }
+    
+    .tab-label {
+        font-size: 0.6rem;
+    }
+    
+    /* Small Mobile Layout */
+    .ranking-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 18px;
+    }
+    
+    .ranking-badge {
+        top: 5px;
+        left: 5px;
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .ranking-badge::before {
+        font-size: 0.75rem;
+        margin-right: 0.2rem;
+    }
+    
+    .ranking-poster {
+        width: 120px;
+        height: 160px;
+        margin-bottom: 1rem;
+    }
+    
+    .ranking-title {
+        font-size: 1.2rem;
+    }
+    
+    .ranking-japanese {
+        font-size: 0.85rem;
+    }
+    
+    .ranking-stats {
+        gap: 0.5rem;
+    }
+    
+    .ranking-stats span {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.7rem;
+    }
+    
+    .ranking-genre {
+        font-size: 0.8rem;
+    }
+    
+    .trending-grid,
+    .alphabetical-grid,
+    .year-content {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.6rem;
+    }
+    
+    .anime-card {
+        padding: 0.6rem;
+    }
+    
+    .anime-title {
+        font-size: 0.7rem;
+    }
+    
+    .anime-id {
+        font-size: 0.6rem;
+    }
+}
+
+@media (max-width: 320px) {
+    .explorer-header {
+        padding: 1rem 0;
+    }
+    
+    .explorer-title {
+        font-size: 1.4rem;
+    }
+    
+    .explorer-subtitle {
+        font-size: 0.8rem;
+    }
+    
+    .tab-navigation {
+        padding: 0.2rem 0;
+    }
+    
+    .tab-btn {
+        padding: 0.4rem 0.5rem;
+        min-width: 50px;
+        max-width: 70px;
+    }
+    
+    .tab-icon {
+        font-size: 0.8rem;
+    }
+    
+    .tab-label {
+        font-size: 0.5rem;
+    }
+    
+    /* Ultra Small Mobile Layout */
+    .ranking-card {
+        padding: 0.8rem;
+        margin-bottom: 0.8rem;
+        border-radius: 16px;
+    }
+    
+    .ranking-badge {
+        top: 4px;
+        left: 4px;
+        font-size: 0.65rem;
+        padding: 0.2rem 0.4rem;
+    }
+    
+    .ranking-badge::before {
+        font-size: 0.7rem;
+        margin-right: 0.15rem;
+    }
+    
+    .ranking-poster {
+        width: 100px;
+        height: 140px;
+        margin-bottom: 0.8rem;
+    }
+    
+    .ranking-title {
+        font-size: 1.1rem;
+    }
+    
+    .ranking-japanese {
+        font-size: 0.8rem;
+    }
+    
+    .ranking-stats {
+        gap: 0.4rem;
+    }
+    
+    .ranking-stats span {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.6rem;
+    }
+    
+    .ranking-genre {
+        font-size: 0.75rem;
+    }
+    
+    .trending-grid,
+    .alphabetical-grid,
+    .year-content {
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 0.4rem;
+    }
+    
+    .anime-card {
+        padding: 0.5rem;
+    }
+    
+    .anime-title {
+        font-size: 0.6rem;
+    }
+    
+    .anime-id {
+        font-size: 0.5rem;
+    }
+}
