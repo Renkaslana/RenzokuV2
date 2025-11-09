@@ -8,12 +8,9 @@ function getSearchQuery() {
     return urlParams.get('q');
 }
 
-// Fetch search results from API
-async function fetchSearchResults(query) {
+// Fetch anime search results
+async function fetchAnimeSearchResults(query) {
     try {
-        console.log('Searching for:', query);
-        
-        // Try different API endpoints and methods
         const endpoints = [
             `${SEARCH_API_URL}?keyword=${encodeURIComponent(query)}`,
             `${SEARCH_API_URL}/${encodeURIComponent(query)}`,
@@ -23,7 +20,7 @@ async function fetchSearchResults(query) {
         
         for (const url of endpoints) {
             try {
-                console.log('Trying URL:', url);
+                console.log('Trying anime URL:', url);
                 
                 let response;
                 try {
@@ -42,55 +39,144 @@ async function fetchSearchResults(query) {
                     });
                 } catch (corsError) {
                     console.log('Direct API failed, trying CORS proxy...');
-                    // Use CORS proxy as fallback
                     const proxyUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
                     response = await fetch(proxyUrl);
                 }
                 
-                console.log('Response status:', response.status);
-                
                 if (!response.ok) {
                     if (response.status === 404) {
-                        console.log('404 - Endpoint not found, trying next...');
                         continue;
                     }
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 const result = await response.json();
-                console.log('API Response:', result);
                 
-                // Check for AI Detector response
                 if (result.status === 'Plana AI Detector') {
-                    console.log('AI Detector blocked request:', result.message);
-                    throw new Error('API blocked by AI Detector');
+                    console.log('AI Detector blocked request');
+                    continue;
                 }
                 
                 if (result.status === 'success' && result.search_results) {
-                    console.log('Found results:', result.search_results.length);
-                    return result.search_results;
+                    return result.search_results.map(item => ({ ...item, type: 'anime' }));
                 } else if (result.status === 'success (fallback)' && result.search_results) {
-                    console.log('Found fallback results:', result.search_results.length);
-                    return result.search_results;
+                    return result.search_results.map(item => ({ ...item, type: 'anime' }));
                 } else if (result.data && Array.isArray(result.data)) {
-                    console.log('Found results in data field:', result.data.length);
-                    return result.data;
+                    return result.data.map(item => ({ ...item, type: 'anime' }));
                 } else if (Array.isArray(result)) {
-                    console.log('Found direct array results:', result.length);
-                    return result;
+                    return result.map(item => ({ ...item, type: 'anime' }));
                 }
                 
             } catch (error) {
-                console.log(`URL ${url} failed:`, error.message);
-                if (error.message.includes('AI Detector')) {
-                    throw error; // Don't try other URLs if AI blocked
-                }
+                console.log(`Anime URL ${url} failed:`, error.message);
                 continue;
             }
         }
         
-        console.log('All endpoints failed');
         return [];
+    } catch (error) {
+        console.error('Error fetching anime search results:', error);
+        return [];
+    }
+}
+
+// Fetch donghua search results
+async function fetchDonghuaSearchResults(query) {
+    try {
+        const endpoints = [
+            `${DONGHUA_SEARCH_API_URL}?keyword=${encodeURIComponent(query)}`,
+            `${DONGHUA_SEARCH_API_URL}/${encodeURIComponent(query)}`,
+            `https://www.sankavollerei.com/anime/donghua/search?q=${encodeURIComponent(query)}`,
+            `https://www.sankavollerei.com/anime/donghua/search?search=${encodeURIComponent(query)}`
+        ];
+        
+        for (const url of endpoints) {
+            try {
+                console.log('Trying donghua URL:', url);
+                
+                let response;
+                try {
+                    response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            'Accept': 'application/json, text/plain, */*',
+                            'Accept-Language': 'en-US,en;q=0.9',
+                            'Referer': 'https://www.sankavollerei.com/',
+                            'Cache-Control': 'no-cache',
+                            'Pragma': 'no-cache'
+                        },
+                        mode: 'cors',
+                        credentials: 'omit'
+                    });
+                } catch (corsError) {
+                    console.log('Direct API failed, trying CORS proxy...');
+                    const proxyUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
+                    response = await fetch(proxyUrl);
+                }
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        continue;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.status === 'Plana AI Detector') {
+                    console.log('AI Detector blocked request');
+                    continue;
+                }
+                
+                if (result.status === 'success' && result.search_results) {
+                    return result.search_results.map(item => ({ ...item, type: 'donghua' }));
+                } else if (result.status === 'success (fallback)' && result.search_results) {
+                    return result.search_results.map(item => ({ ...item, type: 'donghua' }));
+                } else if (result.data && Array.isArray(result.data)) {
+                    return result.data.map(item => ({ ...item, type: 'donghua' }));
+                } else if (Array.isArray(result)) {
+                    return result.map(item => ({ ...item, type: 'donghua' }));
+                }
+                
+            } catch (error) {
+                console.log(`Donghua URL ${url} failed:`, error.message);
+                continue;
+            }
+        }
+        
+        return [];
+    } catch (error) {
+        console.error('Error fetching donghua search results:', error);
+        return [];
+    }
+}
+
+// Fetch search results from API (searches both anime and donghua)
+async function fetchSearchResults(query) {
+    try {
+        console.log('Searching for:', query);
+        
+        // Search both anime and donghua in parallel
+        const [animeResults, donghuaResults] = await Promise.allSettled([
+            fetchAnimeSearchResults(query),
+            fetchDonghuaSearchResults(query)
+        ]);
+        
+        let results = [];
+        
+        // Combine results from both sources
+        if (animeResults.status === 'fulfilled' && animeResults.value) {
+            results = [...results, ...animeResults.value];
+        }
+        
+        if (donghuaResults.status === 'fulfilled' && donghuaResults.value) {
+            results = [...results, ...donghuaResults.value];
+        }
+        
+        console.log(`Found ${results.length} total results (${animeResults.status === 'fulfilled' ? animeResults.value?.length || 0 : 0} anime, ${donghuaResults.status === 'fulfilled' ? donghuaResults.value?.length || 0 : 0} donghua)`);
+        
+        return results;
         
     } catch (error) {
         console.error('Error fetching search results:', error);
@@ -134,67 +220,89 @@ function showResults() {
 }
 
 // Create search result card
-function createSearchResultCard(anime) {
+function createSearchResultCard(item) {
     const card = document.createElement('div');
     card.className = 'search-result-card';
     
+    const isDonghua = item.type === 'donghua';
+    
     // Extract slug from URL - handle different URL formats
-    let slug = anime.slug;
+    let slug = item.slug;
     if (typeof slug === 'string') {
-        // Remove common URL prefixes with more specific regex
+        if (isDonghua) {
+            // Clean donghua slug
+            slug = slug.replace(/^https?:\/\/[^\/]+\/anichin\//, '');
+            slug = slug.replace(/^https?:\/\/[^\/]+\/donghua\//, '');
+            slug = slug.replace(/^https?:\/\/[^\/]+\/donghua\/donghua\//, '');
+            slug = slug.replace(/^https?:\/\/[^\/]+\/donghua\/detail\//, '');
+            slug = slug.replace(/\/anichin\/episode\//, '');
+            slug = slug.replace(/\/anichin\/detail\//, '');
+            slug = slug.replace(/\/$/, '');
+            slug = slug.replace(/-episode-\d+.*$/i, '');
+            slug = slug.replace(/-tamat-subtitle-indonesia$/i, '');
+        } else {
+            // Clean anime slug
         slug = slug.replace(/^https?:\/\/[^\/]+\/anime\//, '');
         slug = slug.replace(/^https?:\/\/[^\/]+\/anime\/anime\//, '');
         slug = slug.replace(/^https?:\/\/[^\/]+\/anime\/detail\//, '');
-        slug = slug.replace(/\/$/, ''); // Remove trailing slash
+        }
+        slug = slug.replace(/\/$/, '');
         slug = slug.trim();
+        slug = slug.replace(/^https?:\/\//, '');
+        slug = slug.replace(/^[^\/]+\//, '');
         
-        // Additional cleanup for common patterns
-        slug = slug.replace(/^https?:\/\//, ''); // Remove any remaining protocol
-        slug = slug.replace(/^[^\/]+\//, ''); // Remove domain part
-        
-        // Remove remaining 'anime/' prefix if exists
+        if (isDonghua) {
+            slug = slug.replace(/^donghua\//, '');
+        } else {
         slug = slug.replace(/^anime\//, '');
+        }
         
-        // Final cleanup
         slug = slug.trim();
     }
     
-    console.log('Original slug:', anime.slug, 'Processed slug:', slug);
+    console.log('Original slug:', item.slug, 'Processed slug:', slug, 'Type:', item.type);
+    
+    // Create type badge
+    const typeBadge = isDonghua 
+        ? `<span class="anime-badge" style="background: #ff6b6b;">🐉 Donghua</span>`
+        : `<span class="anime-badge" style="background: #4dabf7;">📺 Anime</span>`;
     
     // Create status badge
-    const statusBadge = anime.status === 'Ongoing' 
-        ? `<span class="anime-badge status-ongoing">📺 ${anime.status}</span>`
-        : `<span class="anime-badge status-completed">✅ ${anime.status}</span>`;
+    const statusBadge = item.status === 'Ongoing' 
+        ? `<span class="anime-badge status-ongoing">📺 ${item.status}</span>`
+        : `<span class="anime-badge status-completed">✅ ${item.status}</span>`;
     
     // Create rating badge if available
-    const ratingBadge = anime.rating && anime.rating !== '0' 
-        ? `<span class="anime-badge rating">⭐ ${anime.rating}</span>`
+    const ratingBadge = item.rating && item.rating !== '0' 
+        ? `<span class="anime-badge rating">⭐ ${item.rating}</span>`
         : '';
     
     // Create episode count badge
-    const episodeBadge = anime.episode_count && anime.episode_count !== '?'
-        ? `<span class="anime-badge">📺 ${anime.episode_count} Episode</span>`
+    const episodeBadge = item.episode_count && item.episode_count !== '?'
+        ? `<span class="anime-badge">📺 ${item.episode_count} Episode</span>`
         : '';
     
     card.innerHTML = `
-        <img src="${anime.poster}" alt="${anime.title}" class="anime-poster" loading="lazy" onerror="this.src='https://via.placeholder.com/220x320?text=No+Image'">
+        <img src="${item.poster}" alt="${item.title}" class="anime-poster" loading="lazy" onerror="this.src='https://via.placeholder.com/220x320?text=No+Image'">
         <div class="anime-info">
-            <h3 class="anime-title">${anime.title}</h3>
+            <h3 class="anime-title">${item.title}</h3>
             <div class="anime-meta">
+                ${typeBadge}
                 ${statusBadge}
                 ${ratingBadge}
                 ${episodeBadge}
             </div>
-            <p class="anime-synopsis">${anime.synopsis || 'Sinopsis tidak tersedia.'}</p>
+            <p class="anime-synopsis">${item.synopsis || 'Sinopsis tidak tersedia.'}</p>
         </div>
     `;
     
     // Add click event to navigate to detail page
     card.addEventListener('click', () => {
-        console.log('Navigating to detail page with slug:', slug);
-        console.log('Original anime.slug:', anime.slug);
-        console.log('Processed slug:', slug);
-        window.location.href = `detail.html?slug=${encodeURIComponent(slug)}`;
+        console.log('Navigating to detail page with slug:', slug, 'type:', item.type);
+        const detailUrl = isDonghua 
+            ? `detail.html?slug=${encodeURIComponent(slug)}&type=donghua`
+            : `detail.html?slug=${encodeURIComponent(slug)}`;
+        window.location.href = detailUrl;
     });
     
     return card;

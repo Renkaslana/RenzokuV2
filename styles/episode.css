@@ -41,6 +41,46 @@
     margin-bottom: 2rem;
 }
 
+.streaming-servers-selector {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+.streaming-servers-selector label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.server-select {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.server-select:hover {
+    border-color: var(--primary-color);
+}
+
+.server-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
 .player-container {
     position: relative;
     width: 100%;

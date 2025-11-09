@@ -195,9 +195,12 @@
 }
 
 .meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem;
+    align-items: flex-start;
+    width: 100%;
+    position: relative;
 }
 
 .meta-label {
@@ -206,20 +209,36 @@
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    white-space: nowrap;
 }
 
 .meta-value {
     font-size: 1rem;
     color: var(--text-primary);
     font-weight: 600;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    width: 100%;
+    line-height: 1.4;
+}
+
+.meta-value.status-badge {
+    width: auto;
+    align-self: flex-start;
+    margin-left: 0;
 }
 
 .status-badge {
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
-    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 0.9rem;
-    width: fit-content;
+    font-weight: 600;
+    white-space: nowrap;
+    min-width: fit-content;
+    margin: 0;
 }
 
 .status-badge.completed {
@@ -282,11 +301,88 @@
     text-align: justify;
 }
 
+/* Episode List Controls */
+.episode-controls {
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.episode-search {
+    flex: 1;
+    min-width: 200px;
+    max-width: 400px;
+    position: relative;
+}
+
+.episode-search input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    background: rgba(30, 41, 59, 0.5);
+    border: 2px solid rgba(99, 102, 241, 0.3);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.episode-search input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: rgba(30, 41, 59, 0.8);
+}
+
+.episode-search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.episode-view-toggle {
+    display: flex;
+    gap: 0.5rem;
+    background: rgba(30, 41, 59, 0.5);
+    padding: 0.25rem;
+    border-radius: 8px;
+}
+
+.view-toggle-btn {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.view-toggle-btn.active {
+    background: var(--gradient);
+    color: white;
+}
+
+.episode-stats {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
 /* Episodes Grid */
 .episodes-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1rem;
+}
+
+.episodes-grid.compact-list {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
 }
 
 .episode-card {
@@ -307,10 +403,25 @@
     transform: translateX(5px);
 }
 
+.episode-card.compact {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+}
+
+.episode-card.compact:hover {
+    transform: translateX(3px);
+}
+
 .episode-info {
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.episode-info.compact {
+    gap: 0.75rem;
 }
 
 .episode-number {
@@ -324,17 +435,109 @@
     justify-content: center;
     font-weight: 700;
     font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.episode-number.compact {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+}
+
+.episode-title-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    flex: 1;
 }
 
 .episode-title {
     font-size: 0.95rem;
     color: var(--text-primary);
     font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.episode-title.compact {
+    font-size: 0.9rem;
+}
+
+.episode-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .episode-icon {
     font-size: 1.2rem;
     color: var(--text-secondary);
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.episode-card:hover .episode-icon {
+    transform: scale(1.2);
+    color: var(--primary-color);
+}
+
+.episode-icon.compact {
+    font-size: 1rem;
+}
+
+/* Episode Pagination */
+.episode-pagination {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.load-more-btn {
+    padding: 0.75rem 2rem;
+    background: var(--gradient);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.load-more-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(99, 102, 241, 0.4);
+}
+
+.load-more-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.episode-pagination-info {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.no-episodes-found {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+}
+
+.no-episodes-found-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
 }
 
 /* Batch Section */
@@ -382,6 +585,54 @@
     .anime-meta-large {
         grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
+        padding: 1.25rem;
+    }
+
+    .meta-item {
+        gap: 0.5rem !important;
+        align-items: flex-start !important;
+        flex-direction: column !important;
+        display: flex !important;
+    }
+
+    .meta-label {
+        font-size: 0.8rem;
+        width: 100%;
+        display: block;
+        order: 1;
+        margin: 0;
+    }
+
+    .meta-value {
+        font-size: 0.95rem;
+        width: 100%;
+        display: block;
+        order: 2;
+        margin: 0;
+    }
+
+    .meta-value.status-badge {
+        width: auto;
+        align-self: flex-start !important;
+        max-width: 100%;
+        margin-left: 0 !important;
+        margin-top: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: 0 !important;
+        display: inline-flex !important;
+        order: 2 !important;
+        position: relative;
+        left: 0 !important;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        width: auto;
+        min-width: fit-content;
+        margin: 0;
+        display: inline-flex;
     }
 
     .genres-container {
@@ -396,8 +647,41 @@
         grid-template-columns: 1fr;
     }
 
+    .episode-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .episode-search {
+        max-width: 100%;
+    }
+
+    .episode-view-toggle {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .episode-stats {
+        width: 100%;
+        text-align: center;
+    }
+
     .batch-section {
         text-align: center;
+    }
+
+    .episode-card {
+        padding: 0.75rem 1rem;
+    }
+
+    .episode-title {
+        font-size: 0.9rem;
+    }
+
+    .episode-number {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
     }
 }
 
@@ -412,6 +696,68 @@
 
     .anime-meta-large {
         grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .meta-item {
+        gap: 0.5rem !important;
+        align-items: flex-start !important;
+        flex-direction: column !important;
+        width: 100%;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .meta-label {
+        font-size: 0.75rem;
+        width: 100%;
+        display: block !important;
+        order: 1 !important;
+        margin: 0;
+        padding: 0;
+        position: relative;
+        left: 0;
+    }
+
+    .meta-value {
+        font-size: 0.9rem;
+        width: 100%;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        display: block !important;
+        order: 2 !important;
+        margin: 0;
+        padding: 0;
+    }
+
+    .meta-value.status-badge {
+        width: auto !important;
+        align-self: flex-start !important;
+        max-width: 100%;
+        margin-top: 0 !important;
+        margin-left: 0 !important;
+        margin-right: auto !important;
+        margin-bottom: 0 !important;
+        padding: 0.5rem 1rem !important;
+        display: inline-flex !important;
+        order: 2 !important;
+        position: relative;
+        left: 0 !important;
+        right: auto !important;
+        float: none !important;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        width: auto;
+        min-width: fit-content;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
     }
 
     .synopsis-text {

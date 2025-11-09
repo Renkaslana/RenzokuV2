@@ -1,6 +1,13 @@
 // API Configuration
 const API_BASE_URL = 'https://www.sankavollerei.com/anime/anime';
+const DONGHUA_API_BASE_URL = 'https://www.sankavollerei.com/anime/donghua/detail';
 const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+
+// Get content type from URL parameters (anime or donghua)
+function getContentType() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('type') || 'anime'; // Default to anime
+}
 
 // Get slug from URL parameters
 function getAnimeSlug() {
@@ -16,12 +23,27 @@ function getAnimeSlug() {
     slug = decodeURIComponent(slug);
     console.log('Raw slug from URL:', slug);
     
+    const contentType = getContentType();
+    const isDonghua = contentType === 'donghua';
+    
     // Process slug to remove URL prefixes - ENHANCED REGEX
     if (typeof slug === 'string') {
-        // Remove common URL prefixes with more specific regex
-        slug = slug.replace(/^https?:\/\/[^\/]+\/anime\//, '');
-        slug = slug.replace(/^https?:\/\/[^\/]+\/anime\/anime\//, '');
-        slug = slug.replace(/^https?:\/\/[^\/]+\/anime\/detail\//, '');
+        if (isDonghua) {
+            // Remove donghua URL prefixes
+            slug = slug.replace(/^https?:\/\/[^\/]+\/donghua\//, '');
+            slug = slug.replace(/^https?:\/\/[^\/]+\/donghua\/donghua\//, '');
+            slug = slug.replace(/^https?:\/\/[^\/]+\/donghua\/detail\//, '');
+            slug = slug.replace(/^https?:\/\/[^\/]+\/anichin\//, '');
+            slug = slug.replace(/\/anichin\/episode\//, '');
+            slug = slug.replace(/\/anichin\/detail\//, '');
+            slug = slug.replace(/-episode-\d+.*$/i, '');
+            slug = slug.replace(/-tamat-subtitle-indonesia$/i, '');
+        } else {
+            // Remove anime URL prefixes
+            slug = slug.replace(/^https?:\/\/[^\/]+\/anime\//, '');
+            slug = slug.replace(/^https?:\/\/[^\/]+\/anime\/anime\//, '');
+            slug = slug.replace(/^https?:\/\/[^\/]+\/anime\/detail\//, '');
+        }
         slug = slug.replace(/\/$/, ''); // Remove trailing slash
         slug = slug.trim();
         
@@ -29,37 +51,55 @@ function getAnimeSlug() {
         slug = slug.replace(/^https?:\/\//, ''); // Remove any remaining protocol
         slug = slug.replace(/^[^\/]+\//, ''); // Remove domain part
         
-        // Remove remaining 'anime/' prefix if exists
-        slug = slug.replace(/^anime\//, '');
+        // Remove remaining prefix if exists
+        if (isDonghua) {
+            slug = slug.replace(/^donghua\//, '');
+        } else {
+            slug = slug.replace(/^anime\//, '');
+        }
         
         // Final cleanup
         slug = slug.trim();
     }
     
-    console.log('Processed slug:', slug);
+    console.log('Processed slug:', slug, 'Type:', contentType);
     return slug;
 }
 
 // Fetch anime detail data from API
 async function fetchAnimeDetail(slug) {
+    const contentType = getContentType();
+    const isDonghua = contentType === 'donghua';
+    
     try {
-        console.log('Fetching anime detail for slug:', slug);
+        console.log(`Fetching ${contentType} detail for slug:`, slug);
         
-        // Try different API endpoints and methods
-        const endpoints = [
-            `${API_BASE_URL}/${slug}`,
-            `https://www.sankavollerei.com/anime/anime/${slug}`,
-            `https://www.sankavollerei.com/anime/detail/${slug}`,
-            `https://www.sankavollerei.com/anime/info/${slug}`,
-            // Try with different slug formats
-            `https://www.sankavollerei.com/anime/anime/${slug}-sub-indo`,
-            `https://www.sankavollerei.com/anime/anime/${slug}-sub`,
-            `https://www.sankavollerei.com/anime/anime/${slug}-dub`,
-            // Try without sub-indo suffix
-            `https://www.sankavollerei.com/anime/anime/${slug.replace('-sub-indo', '')}`,
-            `https://www.sankavollerei.com/anime/anime/${slug.replace('-sub', '')}`,
-            `https://www.sankavollerei.com/anime/anime/${slug.replace('-dub', '')}`
-        ];
+        // Use different endpoints based on content type
+        let endpoints = [];
+        
+        if (isDonghua) {
+            endpoints = [
+                `${DONGHUA_API_BASE_URL}/${slug}`,
+                `https://www.sankavollerei.com/anime/donghua/detail/${slug}`,
+                `https://www.sankavollerei.com/anime/donghua/donghua/${slug}`,
+                `https://www.sankavollerei.com/anime/donghua/info/${slug}`
+            ];
+        } else {
+            endpoints = [
+                `${API_BASE_URL}/${slug}`,
+                `https://www.sankavollerei.com/anime/anime/${slug}`,
+                `https://www.sankavollerei.com/anime/detail/${slug}`,
+                `https://www.sankavollerei.com/anime/info/${slug}`,
+                // Try with different slug formats
+                `https://www.sankavollerei.com/anime/anime/${slug}-sub-indo`,
+                `https://www.sankavollerei.com/anime/anime/${slug}-sub`,
+                `https://www.sankavollerei.com/anime/anime/${slug}-dub`,
+                // Try without sub-indo suffix
+                `https://www.sankavollerei.com/anime/anime/${slug.replace('-sub-indo', '')}`,
+                `https://www.sankavollerei.com/anime/anime/${slug.replace('-sub', '')}`,
+                `https://www.sankavollerei.com/anime/anime/${slug.replace('-dub', '')}`
+            ];
+        }
         
         console.log('Will try', endpoints.length, 'different endpoints');
         
@@ -70,7 +110,7 @@ async function fetchAnimeDetail(slug) {
                 
                 // Add timeout to prevent hanging
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced timeout
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
                 
                 let response;
                 try {
@@ -86,11 +126,10 @@ async function fetchAnimeDetail(slug) {
                             'Pragma': 'no-cache'
                         },
                         mode: 'cors',
-                    credentials: 'omit'
-                });
+                        credentials: 'omit'
+                    });
                 } catch (corsError) {
                     console.log('Direct API failed, trying CORS proxy...');
-                    // Use CORS proxy as fallback
                     const proxyUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
                     response = await fetch(proxyUrl, {
                         signal: controller.signal
@@ -118,22 +157,31 @@ async function fetchAnimeDetail(slug) {
                     throw new Error('API sedang dalam mode perlindungan. Silakan coba lagi nanti.');
                 }
                 
-                if (result.status === 'success' && result.data) {
-                    console.log('✅ Found anime detail data from:', url);
-                    return result.data;
-                } else if (result.data && !result.status) {
-                    // Some APIs return data directly
-                    console.log('✅ Found anime detail data (direct) from:', url);
-                    return result.data;
+                // Handle donghua response structure (data directly in root)
+                if (isDonghua) {
+                    if (result.status === 'Completed' || result.status === 'Ongoing' || result.title) {
+                        console.log('✅ Found donghua detail data from:', url);
+                        // Transform donghua response to match anime structure
+                        return transformDonghuaResponse(result);
+                    }
                 } else {
-                    console.log('❌ Invalid response structure, trying next endpoint...');
-                    continue;
+                    // Handle anime response structure
+                    if (result.status === 'success' && result.data) {
+                        console.log('✅ Found anime detail data from:', url);
+                        return result.data;
+                    } else if (result.data && !result.status) {
+                        console.log('✅ Found anime detail data (direct) from:', url);
+                        return result.data;
+                    }
                 }
+                
+                console.log('❌ Invalid response structure, trying next endpoint...');
+                continue;
                 
             } catch (error) {
                 console.log(`❌ URL ${url} failed:`, error.message);
                 if (error.message.includes('perlindungan') || error.message.includes('AI Detector')) {
-                    throw error; // Don't try other URLs if AI blocked
+                    throw error;
                 }
                 if (error.name === 'AbortError') {
                     console.log('⏰ Request timeout, trying next endpoint...');
@@ -144,12 +192,61 @@ async function fetchAnimeDetail(slug) {
         }
         
         console.log('❌ All detail endpoints failed');
-        throw new Error('Semua endpoint detail anime gagal');
+        throw new Error(`Semua endpoint detail ${contentType} gagal`);
         
     } catch (error) {
-        console.error('Error fetching anime detail:', error);
+        console.error(`Error fetching ${contentType} detail:`, error);
         throw error;
     }
+}
+
+// Transform donghua API response to match anime structure
+function transformDonghuaResponse(donghuaData) {
+    // Map episode_list to episode_lists format
+    const episodeLists = (donghuaData.episodes_list || []).map((ep, index) => {
+        // Extract episode number from episode string or slug
+        let episodeNumber = index + 1;
+        const episodeMatch = ep.episode?.match(/Episode\s+(\d+)/i) || ep.slug?.match(/episode-(\d+)/i);
+        if (episodeMatch) {
+            episodeNumber = parseInt(episodeMatch[1]);
+        }
+        
+        return {
+            episode_number: episodeNumber.toString(),
+            episode: ep.episode || `Episode ${episodeNumber}`,
+            slug: ep.slug || ep.url?.replace(/^\/anichin\/episode\//, '').replace(/\/$/, '') || ''
+        };
+    });
+    
+    // Extract slug from URL if needed
+    let slug = donghuaData.slug || '';
+    if (!slug && donghuaData.url) {
+        slug = donghuaData.url.replace(/^\/anichin\/detail\//, '').replace(/\/$/, '');
+    }
+    
+    return {
+        title: donghuaData.title || '',
+        japanese_title: donghuaData.alter_title || '',
+        poster: donghuaData.poster || '',
+        rating: donghuaData.rating || 'N/A',
+        status: donghuaData.status || 'Unknown',
+        type: donghuaData.type || 'Donghua',
+        episode_count: donghuaData.episodes_count || (episodeLists.length > 0 ? episodeLists.length.toString() : '?'),
+        duration: donghuaData.duration || '',
+        release_date: donghuaData.released || donghuaData.released_on || '',
+        studio: donghuaData.studio || '',
+        synopsis: donghuaData.synopsis || '',
+        genres: (donghuaData.genres || []).map(genre => ({
+            name: genre.name || '',
+            otakudesu_url: genre.url || ''
+        })),
+        episode_lists: episodeLists,
+        recommendations: [], // Donghua API might not have recommendations
+        slug: slug,
+        network: donghuaData.network || '',
+        country: donghuaData.country || '',
+        season: donghuaData.season || ''
+    };
 }
 
 // Show loading state
@@ -287,9 +384,19 @@ function displayAnimeDetail(anime) {
     
     // Meta information
     const statusElement = document.getElementById('anime-status');
-    statusElement.textContent = anime.status || 'Unknown';
-    statusElement.className = 'meta-value status-badge ' + 
-        (anime.status?.toLowerCase() === 'completed' ? 'completed' : 'ongoing');
+    const statusText = anime.status || 'Unknown';
+    const statusLower = statusText.toLowerCase();
+    
+    // Determine status class - handle various status formats
+    let statusClass = 'ongoing';
+    if (statusLower.includes('completed') || statusLower.includes('tamat') || statusLower.includes('selesai')) {
+        statusClass = 'completed';
+    } else if (statusLower.includes('ongoing') || statusLower.includes('berlangsung')) {
+        statusClass = 'ongoing';
+    }
+    
+    statusElement.textContent = statusText;
+    statusElement.className = 'meta-value status-badge ' + statusClass;
     
     document.getElementById('anime-type').textContent = anime.type || '-';
     document.getElementById('anime-episodes').textContent = anime.episode_count || '-';
@@ -340,39 +447,236 @@ function displayGenres(genres) {
     });
 }
 
-// Display episodes
+// Episode List State Management
+let allEpisodes = [];
+let filteredEpisodes = [];
+let displayedEpisodes = [];
+let currentEpisodeView = 'grid';
+let episodesPerPage = 20;
+let currentEpisodePage = 1;
+
+// Display episodes with pagination and search
 function displayEpisodes(episodes) {
-    const container = document.getElementById('episodes-list');
-    container.innerHTML = '';
-    
     if (!episodes || episodes.length === 0) {
+        const container = document.getElementById('episodes-list');
         container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Tidak ada episode tersedia</p>';
+        hideEpisodeControls();
         return;
     }
     
-    // Reverse to show latest episode first
-    const reversedEpisodes = [...episodes].reverse();
+    // Store all episodes
+    allEpisodes = [...episodes].reverse(); // Reverse to show latest first
+    filteredEpisodes = [...allEpisodes];
+    currentEpisodePage = 1;
     
-    reversedEpisodes.forEach(episode => {
-        const card = document.createElement('div');
-        card.className = 'episode-card';
-        card.style.cursor = 'pointer';
-        
-        card.innerHTML = `
-            <div class="episode-info">
-                <div class="episode-number">${episode.episode_number}</div>
-                <div class="episode-title">Episode ${episode.episode_number}</div>
-            </div>
-            <span class="episode-icon">▶️</span>
-        `;
-        
-        // Navigate to episode page
-        card.addEventListener('click', () => {
-            window.location.href = `episode.html?slug=${episode.slug}`;
+    // Setup episode controls
+    setupEpisodeControls();
+    
+    // Render episodes
+    renderEpisodes();
+}
+
+// Setup episode controls (search, view toggle, pagination)
+function setupEpisodeControls() {
+    const searchInput = document.getElementById('episode-search-input');
+    const viewToggleBtns = document.querySelectorAll('.view-toggle-btn');
+    const loadMoreBtn = document.getElementById('load-more-episodes');
+    
+    // Search functionality
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const query = e.target.value.toLowerCase().trim();
+                filterEpisodes(query);
+            }, 300);
         });
-        
+    }
+    
+    // View toggle functionality
+    viewToggleBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const view = btn.dataset.view;
+            switchEpisodeView(view);
+        });
+    });
+    
+    // Load more functionality
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', () => {
+            currentEpisodePage++;
+            renderEpisodes();
+        });
+    }
+    
+    // Show controls
+    updateEpisodeStats();
+}
+
+// Filter episodes by search query
+function filterEpisodes(query) {
+    if (!query) {
+        filteredEpisodes = [...allEpisodes];
+    } else {
+        filteredEpisodes = allEpisodes.filter(episode => {
+            const episodeNum = episode.episode_number || episode.episode?.match(/Episode\s+(\d+)/i)?.[1] || '';
+            const episodeTitle = episode.episode || `Episode ${episodeNum}`;
+            return episodeNum.includes(query) || 
+                   episodeTitle.toLowerCase().includes(query) ||
+                   episode.slug.toLowerCase().includes(query);
+        });
+    }
+    
+    currentEpisodePage = 1;
+    renderEpisodes();
+}
+
+// Switch between grid and list view
+function switchEpisodeView(view) {
+    currentEpisodeView = view;
+    const container = document.getElementById('episodes-list');
+    const viewToggleBtns = document.querySelectorAll('.view-toggle-btn');
+    
+    // Update active button
+    viewToggleBtns.forEach(btn => {
+        if (btn.dataset.view === view) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Update container class
+    if (view === 'list') {
+        container.classList.add('compact-list');
+    } else {
+        container.classList.remove('compact-list');
+    }
+    
+    // Re-render with new view
+    renderEpisodes();
+}
+
+// Render episodes with pagination
+function renderEpisodes() {
+    const container = document.getElementById('episodes-list');
+    const noEpisodesFound = document.getElementById('no-episodes-found');
+    const pagination = document.getElementById('episode-pagination');
+    
+    container.innerHTML = '';
+    
+    if (filteredEpisodes.length === 0) {
+        container.style.display = 'none';
+        if (noEpisodesFound) noEpisodesFound.style.display = 'block';
+        if (pagination) pagination.style.display = 'none';
+        updateEpisodeStats();
+        return;
+    }
+    
+    container.style.display = 'grid';
+    if (noEpisodesFound) noEpisodesFound.style.display = 'none';
+    
+    // Calculate pagination
+    const totalPages = Math.ceil(filteredEpisodes.length / episodesPerPage);
+    const startIndex = 0;
+    const endIndex = currentEpisodePage * episodesPerPage;
+    displayedEpisodes = filteredEpisodes.slice(startIndex, endIndex);
+    
+    const contentType = getContentType();
+    const isDonghua = contentType === 'donghua';
+    const isCompact = currentEpisodeView === 'list';
+    
+    // Render episodes
+    displayedEpisodes.forEach(episode => {
+        const card = createEpisodeCard(episode, isDonghua, isCompact);
         container.appendChild(card);
     });
+    
+    // Update pagination
+    const loadMoreBtn = document.getElementById('load-more-episodes');
+    if (endIndex < filteredEpisodes.length) {
+        if (pagination) {
+            pagination.style.display = 'flex';
+            const paginationInfo = document.getElementById('episode-pagination-info');
+            if (paginationInfo) {
+                paginationInfo.textContent = `Menampilkan ${displayedEpisodes.length} dari ${filteredEpisodes.length} episode`;
+            }
+            if (loadMoreBtn) {
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.textContent = 'Muat Lebih Banyak';
+            }
+        }
+    } else {
+        if (pagination) {
+            pagination.style.display = 'flex';
+            const paginationInfo = document.getElementById('episode-pagination-info');
+            if (paginationInfo) {
+                paginationInfo.textContent = `Semua ${filteredEpisodes.length} episode ditampilkan`;
+            }
+            if (loadMoreBtn) {
+                loadMoreBtn.disabled = true;
+                loadMoreBtn.textContent = 'Semua Episode Ditampilkan';
+            }
+        }
+    }
+    
+    updateEpisodeStats();
+}
+
+// Create episode card element
+function createEpisodeCard(episode, isDonghua, isCompact) {
+    const card = document.createElement('div');
+    card.className = `episode-card${isCompact ? ' compact' : ''}`;
+    card.style.cursor = 'pointer';
+    
+    const episodeNum = episode.episode_number || episode.episode?.match(/Episode\s+(\d+)/i)?.[1] || '';
+    const episodeTitle = episode.episode || `Episode ${episodeNum}`;
+    
+    // Extract subtitle info if available
+    const subtitleMatch = episodeTitle.match(/Subtitle\s+([^\)]+)/i);
+    const subtitle = subtitleMatch ? subtitleMatch[1] : 'Indonesia';
+    
+    card.innerHTML = `
+        <div class="episode-info${isCompact ? ' compact' : ''}">
+            <div class="episode-number${isCompact ? ' compact' : ''}">${episodeNum}</div>
+            <div class="episode-title-wrapper">
+                <div class="episode-title${isCompact ? ' compact' : ''}">${episodeTitle}</div>
+                ${isCompact ? `<div class="episode-subtitle">${subtitle}</div>` : ''}
+            </div>
+        </div>
+        <span class="episode-icon${isCompact ? ' compact' : ''}">▶️</span>
+    `;
+    
+    // Navigate to episode page
+    card.addEventListener('click', () => {
+        const episodeUrl = isDonghua 
+            ? `episode.html?slug=${episode.slug}&type=donghua`
+            : `episode.html?slug=${episode.slug}`;
+        window.location.href = episodeUrl;
+    });
+    
+    return card;
+}
+
+// Update episode statistics
+function updateEpisodeStats() {
+    const statsElement = document.getElementById('episode-stats');
+    if (statsElement && allEpisodes.length > 0) {
+        if (filteredEpisodes.length === allEpisodes.length) {
+            statsElement.textContent = `${allEpisodes.length} Episode`;
+        } else {
+            statsElement.textContent = `${filteredEpisodes.length} dari ${allEpisodes.length} Episode`;
+        }
+    }
+}
+
+// Hide episode controls if no episodes
+function hideEpisodeControls() {
+    const controls = document.querySelector('.episode-controls');
+    if (controls) {
+        controls.style.display = 'none';
+    }
 }
 
 // Display recommendations
@@ -396,6 +700,9 @@ function createRecommendationCard(anime) {
     const card = document.createElement('div');
     card.className = 'anime-card';
     
+    const contentType = getContentType();
+    const isDonghua = contentType === 'donghua';
+    
     card.innerHTML = `
         <img src="${anime.poster}" alt="${anime.title}" class="anime-poster" loading="lazy" onerror="this.src='https://via.placeholder.com/220x320?text=No+Image'">
         <div class="anime-info">
@@ -405,7 +712,28 @@ function createRecommendationCard(anime) {
     
     // Add click event to navigate to detail page
     card.addEventListener('click', () => {
-        window.location.href = `detail.html?slug=${anime.slug}`;
+        let slug = anime.slug;
+        
+        // Clean slug if needed
+        if (typeof slug === 'string') {
+            if (isDonghua || anime.type === 'Donghua') {
+                slug = slug.replace(/^https?:\/\/[^\/]+\/donghua\//, '');
+                slug = slug.replace(/^https?:\/\/[^\/]+\/donghua\/detail\//, '');
+                slug = slug.replace(/^https?:\/\/[^\/]+\/anichin\//, '');
+                slug = slug.replace(/\/anichin\/detail\//, '');
+                slug = slug.replace(/\/$/, '');
+                slug = slug.trim();
+                slug = slug.replace(/^https?:\/\//, '');
+                slug = slug.replace(/^[^\/]+\//, '');
+                slug = slug.replace(/^donghua\//, '');
+                slug = slug.trim();
+            }
+        }
+        
+        const detailUrl = (isDonghua || anime.type === 'Donghua')
+            ? `detail.html?slug=${encodeURIComponent(slug)}&type=donghua`
+            : `detail.html?slug=${encodeURIComponent(slug)}`;
+        window.location.href = detailUrl;
     });
     
     return card;

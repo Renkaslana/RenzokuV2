@@ -1,5 +1,6 @@
 // API Configuration
 const API_BASE_URL = 'https://www.sankavollerei.com/anime/episode';
+const DONGHUA_API_BASE_URL = 'https://www.sankavollerei.com/anime/donghua/episode';
 const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
 
 // Multiple API endpoints for redundancy
@@ -7,6 +8,11 @@ const EPISODE_ENDPOINTS = [
     'https://www.sankavollerei.com/anime/episode',
     'https://api.sankavollerei.com/episode',
     'https://backup.sankavollerei.com/anime/episode'
+];
+
+// Donghua episode endpoints
+const DONGHUA_EPISODE_ENDPOINTS = [
+    'https://www.sankavollerei.com/anime/donghua/episode'
 ];
 
 // Rate limiting configuration
@@ -27,6 +33,12 @@ const PRELOAD_DURATION = 10 * 60 * 1000; // 10 minutes
 // Request queue to prevent overwhelming API
 const REQUEST_QUEUE = [];
 let isProcessingQueue = false;
+
+// Get content type from URL parameters (anime or donghua)
+function getContentType() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('type') || 'anime'; // Default to anime
+}
 
 // Get slug from URL parameters
 function getEpisodeSlug() {
@@ -102,16 +114,23 @@ function cacheEpisode(slug, data) {
     console.log('Cached episode data for:', slug);
 }
 
-// Preload episode data (for instant loading)
-async function preloadEpisode(slug) {
+// Get endpoints based on content type - Unified helper
+function getEpisodeEndpoints(contentType) {
+    const isDonghua = contentType === 'donghua';
+    return isDonghua ? DONGHUA_EPISODE_ENDPOINTS : EPISODE_ENDPOINTS;
+}
+
+// Preload episode data (for instant loading) - Unified approach
+async function preloadEpisode(slug, contentType) {
     if (EPISODE_PRELOAD_CACHE.has(slug)) {
         console.log('Episode already preloaded:', slug);
         return;
     }
     
     try {
-        console.log('Preloading episode:', slug);
-        const data = await fetchEpisodeFromEndpoint(EPISODE_ENDPOINTS[0], slug);
+        console.log(`Preloading ${contentType || 'episode'}:`, slug);
+        const endpoints = getEpisodeEndpoints(contentType || getContentType());
+        const data = await fetchEpisodeFromEndpoint(endpoints[0], slug);
         if (data) {
             EPISODE_PRELOAD_CACHE.set(slug, {
                 data: data,
@@ -124,19 +143,37 @@ async function preloadEpisode(slug) {
     }
 }
 
-// Preload next/previous episodes
+// Preload next/previous episodes - Unified approach
 function preloadAdjacentEpisodes(episode) {
-    if (episode.next_episode) {
-        const nextSlug = extractEpisodeSlug(episode.next_episode.slug);
-        if (nextSlug) {
-            setTimeout(() => preloadEpisode(nextSlug), 1000);
+    const contentType = getContentType();
+    
+    // Helper function to extract and clean slug based on content type
+    function extractAndCleanSlug(episodeData) {
+        const slug = typeof episodeData === 'string' 
+            ? episodeData 
+            : (episodeData.slug || episodeData);
+        
+        if (contentType === 'donghua') {
+            return cleanDonghuaEpisodeSlug(slug);
+        } else {
+            return extractEpisodeSlug(slug) || slug;
         }
     }
     
-    if (episode.prev_episode) {
-        const prevSlug = extractEpisodeSlug(episode.prev_episode.slug);
-        if (prevSlug) {
-            setTimeout(() => preloadEpisode(prevSlug), 1500);
+    // Preload next episode
+    if (episode.next_episode) {
+        const cleanedSlug = extractAndCleanSlug(episode.next_episode);
+        if (cleanedSlug) {
+            setTimeout(() => preloadEpisode(cleanedSlug, contentType), 1000);
+        }
+    }
+    
+    // Preload previous episode
+    if (episode.previous_episode || episode.prev_episode) {
+        const prevEpisode = episode.previous_episode || episode.prev_episode;
+        const cleanedSlug = extractAndCleanSlug(prevEpisode);
+        if (cleanedSlug) {
+            setTimeout(() => preloadEpisode(cleanedSlug, contentType), 1500);
         }
     }
 }
@@ -176,7 +213,111 @@ function queueRequest(fn) {
     });
 }
 
-// Fetch episode data from API with retry mechanism
+// Transform donghua episode response to standard format
+function transformDonghuaEpisodeResponse(donghuaData) {
+    console.log('Transforming donghua episode response:', donghuaData);
+    
+    const transformed = {
+        episode: donghuaData.episode || '',
+        stream_url: donghuaData.streaming?.main_url?.url || '',
+        streaming_servers: donghuaData.streaming?.servers || [],
+        download_urls: transformDonghuaDownloadUrls(donghuaData.download_url),
+        anime: {
+            title: donghuaData.donghua_details?.title || '',
+            slug: cleanDonghuaSlug(donghuaData.donghua_details?.slug || ''),
+            url: donghuaData.donghua_details?.url || ''
+        },
+        previous_episode: donghuaData.navigation?.previous_episode ? {
+            episode: donghuaData.navigation.previous_episode.episode,
+            slug: cleanDonghuaEpisodeSlug(donghuaData.navigation.previous_episode.slug),
+            url: donghuaData.navigation.previous_episode.url
+        } : null,
+        next_episode: donghuaData.navigation?.next_episode ? {
+            episode: donghuaData.navigation.next_episode.episode,
+            slug: cleanDonghuaEpisodeSlug(donghuaData.navigation.next_episode.slug),
+            url: donghuaData.navigation.next_episode.url
+        } : null,
+        has_previous_episode: !!donghuaData.navigation?.previous_episode,
+        has_next_episode: !!donghuaData.navigation?.next_episode
+    };
+    
+    console.log('Transformed donghua episode:', transformed);
+    return transformed;
+}
+
+// Transform donghua download URLs to standard format
+function transformDonghuaDownloadUrls(downloadUrl) {
+    if (!downloadUrl) return null;
+    
+    const downloads = [];
+    
+    // Process each resolution (360p, 480p, 720p, 1080p)
+    const resolutions = ['360p', '480p', '720p', '1080p'];
+    
+    resolutions.forEach(resolution => {
+        const resolutionKey = `download_url_${resolution}`;
+        const resolutionData = downloadUrl[resolutionKey];
+        
+        if (resolutionData) {
+            const urls = [];
+            
+            // Add Mirrored if available
+            if (resolutionData.Mirrored) {
+                urls.push({
+                    url: resolutionData.Mirrored,
+                    provider: 'Mirrored'
+                });
+            }
+            
+            // Add Terabox if available
+            if (resolutionData.Terabox) {
+                urls.push({
+                    url: resolutionData.Terabox,
+                    provider: 'Terabox'
+                });
+            }
+            
+            if (urls.length > 0) {
+                downloads.push({
+                    resolution: resolution,
+                    quality: resolution,
+                    urls: urls
+                });
+            }
+        }
+    });
+    
+    return downloads.length > 0 ? { mp4: downloads } : null;
+}
+
+// Clean donghua slug for navigation
+function cleanDonghuaSlug(slug) {
+    if (!slug) return '';
+    
+    // Remove URL prefixes
+    slug = slug.replace(/^https?:\/\/[^\/]+\//, '');
+    slug = slug.replace(/^\/anichin\//, '');
+    slug = slug.replace(/^anichin\//, '');
+    slug = slug.replace(/\/detail\//, '');
+    slug = slug.replace(/\/$/, '');
+    
+    return slug.trim();
+}
+
+// Clean donghua episode slug for navigation
+function cleanDonghuaEpisodeSlug(slug) {
+    if (!slug) return '';
+    
+    // Remove URL prefixes and paths
+    slug = slug.replace(/^https?:\/\/[^\/]+\//, '');
+    slug = slug.replace(/^\/anichin\/episode\//, '');
+    slug = slug.replace(/^anichin\/episode\//, '');
+    slug = slug.replace(/\/$/, '');
+    
+    return slug.trim();
+}
+
+// Fetch episode data from API with retry mechanism - Unified approach
 async function fetchEpisodeData(slug, maxRetries = 3) {
     // Check cache first
     const cachedData = getCachedEpisode(slug);
@@ -184,18 +325,31 @@ async function fetchEpisodeData(slug, maxRetries = 3) {
         return cachedData;
     }
 
+    const contentType = getContentType();
+    const isDonghua = contentType === 'donghua';
+    const endpoints = getEpisodeEndpoints(contentType);
+    
+    // Debug logging
+    console.log('=== Episode Fetch Debug ===');
+    console.log('Content Type:', contentType);
+    console.log('Is Donghua:', isDonghua);
+    console.log('Slug:', slug);
+    console.log('Endpoints to try:', endpoints);
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-            console.log(`Episode fetch attempt ${attempt}/${maxRetries} for slug: ${slug}`);
+            console.log(`Episode fetch attempt ${attempt}/${maxRetries} for ${contentType} slug: ${slug}`);
             
             // Wait for rate limit
             await waitForRateLimit();
             
             // Try multiple endpoints
-            for (const baseUrl of EPISODE_ENDPOINTS) {
+            for (const baseUrl of endpoints) {
                 try {
+                    console.log(`Trying endpoint: ${baseUrl}/${slug}`);
                     const response = await fetchEpisodeFromEndpoint(baseUrl, slug);
                     if (response) {
+                        console.log('Successfully fetched episode data from:', baseUrl);
                         // Cache successful response
                         cacheEpisode(slug, response);
                         return response;
@@ -223,13 +377,19 @@ async function fetchEpisodeData(slug, maxRetries = 3) {
     }
 }
 
-// Fetch from specific endpoint
+// Fetch from specific endpoint - Unified approach with better error handling
 async function fetchEpisodeFromEndpoint(baseUrl, slug) {
+    const fullUrl = `${baseUrl}/${slug}`;
+    const contentType = getContentType();
+    const isDonghua = contentType === 'donghua';
+    
+    console.log(`Fetching from endpoint: ${fullUrl} (${contentType})`);
+    
     try {
         // Try direct API call first
         let response;
         try {
-            response = await fetch(`${baseUrl}/${slug}`, {
+            response = await fetch(fullUrl, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
@@ -268,12 +428,36 @@ async function fetchEpisodeFromEndpoint(baseUrl, slug) {
             throw new Error('API blocked by AI Detector');
         }
         
+        // Handle donghua response structure (data directly in root)
+        if (isDonghua) {
+            // Donghua API can return status 'success' or data directly
+            if (result.status === 'success') {
+                console.log('Donghua episode data received with success status');
+                return transformDonghuaEpisodeResponse(result);
+            } else if (result.episode || result.streaming || result.donghua_details) {
+                // Direct donghua data structure
+                console.log('Donghua episode data received (direct structure)');
+                return transformDonghuaEpisodeResponse(result);
+            } else {
+                console.error('Invalid donghua response structure:', result);
+                throw new Error('Invalid response structure from donghua API');
+            }
+        }
+        
+        // Handle anime response structure
         if (result.status === 'success' && result.data) {
+            console.log('Anime episode data received');
             return result.data;
         } else if (result.data && !result.status) {
             // Some APIs return data directly
+            console.log('Anime episode data received (direct structure)');
             return result.data;
+        } else if (result.episode || result.stream_url) {
+            // Direct episode structure (fallback)
+            console.log('Anime episode data received (alternative structure)');
+            return result;
         } else {
+            console.error('Invalid anime response structure:', result);
             throw new Error('Invalid response structure from API');
         }
     } catch (error) {
@@ -421,17 +605,30 @@ function showContent() {
     }, 300);
 }
 
-// Update page title
+// Update page title - Unified approach
 function updatePageTitle(episodeTitle) {
-    document.title = `${episodeTitle} - Renzoku Anime`;
+    const contentType = getContentType();
+    const isDonghua = contentType === 'donghua';
+    const platformName = isDonghua ? 'Renzoku Donghua' : 'Renzoku Anime';
+    document.title = `${episodeTitle} - ${platformName}`;
 }
 
 // Setup video player with fallback sources
 function setupVideoPlayer(videoPlayer, episode) {
     if (!videoPlayer || !episode) return;
     
+    const contentType = getContentType();
+    const isDonghua = contentType === 'donghua';
+    
     // Primary stream URL
-    const primaryUrl = episode.stream_url;
+    let primaryUrl = episode.stream_url;
+    
+    // For donghua, use main_url from streaming object
+    if (isDonghua && !primaryUrl && episode.streaming_servers && episode.streaming_servers.length > 0) {
+        // Try to find Premium server first, or use first available
+        const premiumServer = episode.streaming_servers.find(s => s.name && s.name.toLowerCase().includes('premium'));
+        primaryUrl = premiumServer ? premiumServer.url : episode.streaming_servers[0].url;
+    }
     
     if (primaryUrl) {
         videoPlayer.src = primaryUrl;
@@ -450,16 +647,32 @@ function setupVideoPlayer(videoPlayer, episode) {
         console.warn('No stream URL provided for episode');
         handleVideoError(videoPlayer, episode);
     }
+    
+    // For donghua, setup streaming server selector if multiple servers available
+    if (isDonghua && episode.streaming_servers && episode.streaming_servers.length > 1) {
+        setupStreamingServers(videoPlayer, episode);
+    }
 }
 
 // Handle video loading errors
 function handleVideoError(videoPlayer, episode) {
+    const contentType = getContentType();
+    const isDonghua = contentType === 'donghua';
+    
     // Try alternative sources if available
-    const alternativeSources = [
+    let alternativeSources = [
         episode.alternative_stream_url,
         episode.backup_stream_url,
         episode.mirror_url
     ].filter(Boolean);
+    
+    // For donghua, add streaming servers as alternative sources
+    if (isDonghua && episode.streaming_servers && episode.streaming_servers.length > 0) {
+        const serverUrls = episode.streaming_servers
+            .map(server => server.url)
+            .filter(Boolean);
+        alternativeSources = [...alternativeSources, ...serverUrls];
+    }
     
     if (alternativeSources.length > 0) {
         console.log('Trying alternative video sources...');
@@ -508,9 +721,52 @@ function showVideoError(videoPlayer) {
     videoPlayer.parentNode.replaceChild(errorDiv, videoPlayer);
 }
 
-// Extract anime slug from URL
+// Setup streaming servers selector for donghua
+function setupStreamingServers(videoPlayer, episode) {
+    if (!episode.streaming_servers || episode.streaming_servers.length <= 1) return;
+    
+    const playerContainer = videoPlayer.parentElement;
+    if (!playerContainer) return;
+    
+    // Create server selector
+    const serverSelector = document.createElement('div');
+    serverSelector.className = 'streaming-servers-selector';
+    serverSelector.innerHTML = `
+        <label for="server-select">Server Streaming:</label>
+        <select id="server-select" class="server-select">
+            ${episode.streaming_servers.map((server, index) => 
+                `<option value="${index}" ${index === 0 ? 'selected' : ''}>${server.name || `Server ${index + 1}`}</option>`
+            ).join('')}
+        </select>
+    `;
+    
+    // Insert before video player
+    playerContainer.insertBefore(serverSelector, videoPlayer);
+    
+    // Handle server change
+    const select = serverSelector.querySelector('#server-select');
+    select.addEventListener('change', (e) => {
+        const selectedIndex = parseInt(e.target.value);
+        const selectedServer = episode.streaming_servers[selectedIndex];
+        if (selectedServer && selectedServer.url) {
+            videoPlayer.src = selectedServer.url;
+        }
+    });
+}
+
+// Extract anime/donghua slug from URL - Unified helper
 function extractAnimeSlug(url) {
-    // URL format: https://otakudesu.best/anime/slug-sub-indo/
+    if (!url) return null;
+    
+    // Handle donghua URLs
+    if (url.includes('/anichin/') || url.includes('/donghua/')) {
+        const match = url.match(/(?:anichin|donghua)\/(?:detail\/)?([^\/]+)/);
+        if (match) {
+            return cleanDonghuaSlug(match[1]);
+        }
+    }
+    
+    // Handle anime URLs
     const match = url.match(/anime\/([^\/]+)/);
     return match ? match[1] : null;
 }
@@ -530,14 +786,26 @@ function displayEpisode(episode) {
         episodeTitle.textContent = episode.episode;
     }
     
-    // Anime link
-    const animeSlug = extractAnimeSlug(episode.anime.slug);
+    // Anime/Donghua link
+    const contentType = getContentType();
+    const isDonghua = contentType === 'donghua';
+    let animeSlug = episode.anime?.slug || '';
+    
+    // Clean slug if needed
+    if (isDonghua) {
+        animeSlug = cleanDonghuaSlug(animeSlug);
+    } else {
+        animeSlug = extractAnimeSlug(animeSlug) || animeSlug;
+    }
+    
     const animeLink = document.getElementById('anime-link');
     if (animeLink) {
-    if (animeSlug) {
-        animeLink.href = `detail.html?slug=${animeSlug}`;
-    } else {
-        animeLink.style.display = 'none';
+        if (animeSlug) {
+            const linkText = isDonghua ? '📖 Lihat Detail Donghua' : '📖 Lihat Detail Anime';
+            animeLink.textContent = linkText;
+            animeLink.href = `detail.html?slug=${encodeURIComponent(animeSlug)}${isDonghua ? '&type=donghua' : ''}`;
+        } else {
+            animeLink.style.display = 'none';
         }
     }
     
@@ -571,11 +839,16 @@ function setupEpisodeNavigation(episode) {
         return;
     }
     
+    const contentType = getContentType();
+    const isDonghua = contentType === 'donghua';
+    const typeParam = isDonghua ? '&type=donghua' : '';
+    
     // Previous episode
     if (episode.has_previous_episode && episode.previous_episode) {
         prevBtn.style.display = 'flex';
         prevBtn.onclick = () => {
-            window.location.href = `episode.html?slug=${episode.previous_episode.slug}`;
+            const prevSlug = episode.previous_episode.slug || episode.previous_episode;
+            window.location.href = `episode.html?slug=${encodeURIComponent(prevSlug)}${typeParam}`;
         };
     } else {
         prevBtn.style.display = 'none';
@@ -585,7 +858,8 @@ function setupEpisodeNavigation(episode) {
     if (episode.has_next_episode && episode.next_episode) {
         nextBtn.style.display = 'flex';
         nextBtn.onclick = () => {
-            window.location.href = `episode.html?slug=${episode.next_episode.slug}`;
+            const nextSlug = episode.next_episode.slug || episode.next_episode;
+            window.location.href = `episode.html?slug=${encodeURIComponent(nextSlug)}${typeParam}`;
         };
     } else {
         nextBtn.style.display = 'none';
@@ -845,6 +1119,12 @@ function getProviderName(url) {
 // Initialize the application
 async function init() {
     const slug = getEpisodeSlug();
+    const contentType = getContentType();
+    
+    console.log('=== Episode Init ===');
+    console.log('Slug:', slug);
+    console.log('Content Type:', contentType);
+    console.log('URL Search Params:', window.location.search);
     
     if (!slug) {
         showError('Slug episode tidak ditemukan. Silakan kembali ke halaman anime.', 'not-found');
@@ -854,7 +1134,7 @@ async function init() {
     showLoading();
     
     try {
-        console.log('Starting episode load for slug:', slug);
+        console.log(`Starting episode load for ${contentType} slug:`, slug);
         const episode = await queueRequest(() => fetchEpisodeData(slug));
         
         if (!episode) {

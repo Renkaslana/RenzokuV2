@@ -105,7 +105,46 @@
             <div class="container">
                 <div class="section-card">
                     <h2 class="section-title">📺 Daftar Episode</h2>
+                    
+                    <!-- Episode Controls -->
+                    <div class="episode-controls">
+                        <div class="episode-search">
+                            <span class="episode-search-icon">🔍</span>
+                            <input 
+                                type="text" 
+                                id="episode-search-input" 
+                                placeholder="Cari episode..." 
+                                autocomplete="off"
+                            >
+                        </div>
+                        <div class="episode-view-toggle">
+                            <button class="view-toggle-btn active" data-view="grid" title="Grid View">
+                                ⊞
+                            </button>
+                            <button class="view-toggle-btn" data-view="list" title="List View">
+                                ☰
+                            </button>
+                        </div>
+                        <div class="episode-stats" id="episode-stats"></div>
+                    </div>
+                    
+                    <!-- Episodes List Container -->
                     <div id="episodes-list" class="episodes-grid"></div>
+                    
+                    <!-- Episode Pagination -->
+                    <div class="episode-pagination" id="episode-pagination" style="display: none;">
+                        <button class="load-more-btn" id="load-more-episodes">
+                            Muat Lebih Banyak
+                        </button>
+                        <div class="episode-pagination-info" id="episode-pagination-info"></div>
+                    </div>
+                    
+                    <!-- No Episodes Found -->
+                    <div class="no-episodes-found" id="no-episodes-found" style="display: none;">
+                        <div class="no-episodes-found-icon">🔍</div>
+                        <p>Tidak ada episode yang ditemukan</p>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Coba kata kunci lain</p>
+                    </div>
                 </div>
             </div>
         </section>

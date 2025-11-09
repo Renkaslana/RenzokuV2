@@ -1,10 +1,17 @@
 // API Configuration
 const API_URL = 'https://www.sankavollerei.com/anime/home';
+const DONGHUA_API_URL = 'https://www.sankavollerei.com/anime/donghua/home/1';
 
 // Fetch anime data from API
 async function fetchAnimeData() {
     try {
-        const response = await fetch(API_URL);
+        const response = await fetch(API_URL, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*',
+                'Referer': 'https://www.sankavollerei.com/'
+            }
+        });
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -23,37 +30,152 @@ async function fetchAnimeData() {
     }
 }
 
+// Fetch donghua data from API
+async function fetchDonghuaData() {
+    try {
+        const response = await fetch(DONGHUA_API_URL, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*',
+                'Referer': 'https://www.sankavollerei.com/'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            // Process donghua data structure
+            const latestRelease = result.latest_release || [];
+            const completedDonghua = result.complete_anime || [];
+            
+            // Separate ongoing and completed from latest_release
+            const ongoing = latestRelease.filter(item => item.status === 'Ongoing');
+            
+            // Get unique titles from latest_release for ongoing
+            const uniqueOngoing = [];
+            const seenTitles = new Set();
+            
+            ongoing.forEach(item => {
+                // Extract series title from episode title
+                const seriesTitle = item.title.replace(/Episode \d+.*$/i, '').replace(/Subtitle Indonesia.*$/i, '').trim();
+                
+                if (!seenTitles.has(seriesTitle.toLowerCase())) {
+                    seenTitles.add(seriesTitle.toLowerCase());
+                    uniqueOngoing.push({
+                        title: seriesTitle,
+                        slug: item.slug.replace(/\/anichin\/episode\//, '').replace(/\/$/, '').replace(/-episode-\d+.*$/i, ''),
+                        poster: item.poster,
+                        status: item.status,
+                        current_episode: item.current_episode || '',
+                        type: 'Donghua'
+                    });
+                }
+            });
+            
+            // Process completed donghua
+            const processedCompleted = completedDonghua.map(item => {
+                let slug = item.slug || item.url || '';
+                
+                // Clean slug
+                if (typeof slug === 'string') {
+                    slug = slug.replace(/^https?:\/\/[^\/]+\/anichin\//, '');
+                    slug = slug.replace(/^https?:\/\/[^\/]+\/donghua\//, '');
+                    slug = slug.replace(/^https?:\/\/[^\/]+\/donghua\/donghua\//, '');
+                    slug = slug.replace(/\/anichin\/detail\//, '');
+                    slug = slug.replace(/\/anichin\/episode\//, '');
+                    slug = slug.replace(/\/$/, '');
+                    slug = slug.replace(/-episode-\d+.*$/i, '');
+                    slug = slug.replace(/-tamat-subtitle-indonesia$/i, '');
+                    slug = slug.replace(/subtitle-indonesia$/i, '');
+                    slug = slug.trim();
+                    slug = slug.replace(/^https?:\/\//, '');
+                    slug = slug.replace(/^[^\/]+\//, '');
+                    slug = slug.replace(/^donghua\//, '');
+                    slug = slug.trim();
+                }
+                
+                return {
+                    ...item,
+                    slug: slug || item.slug,
+                    type: item.type || 'Donghua'
+                };
+            });
+            
+            return {
+                ongoing_anime: uniqueOngoing,
+                complete_anime: processedCompleted
+            };
+        } else {
+            throw new Error('Data tidak valid dari API');
+        }
+    } catch (error) {
+        console.error('Error fetching donghua data:', error);
+        throw error;
+    }
+}
+
 // Create anime card element
-function createAnimeCard(anime, type = 'ongoing') {
+function createAnimeCard(anime, type = 'ongoing', isDonghua = false) {
     const card = document.createElement('div');
     card.className = 'anime-card';
     
     // Create card HTML
     const episodeInfo = type === 'ongoing' 
-        ? `<span class="anime-badge episode">📺 ${anime.current_episode}</span>
-           <span class="anime-badge">${anime.release_day}</span>`
-        : `<span class="anime-badge episode">✅ ${anime.episode_count} Episode</span>
-           <span class="anime-badge rating">⭐ ${anime.rating}</span>`;
+        ? `<span class="anime-badge episode">📺 ${anime.current_episode || 'Ongoing'}</span>
+           ${anime.release_day ? `<span class="anime-badge">${anime.release_day}</span>` : ''}`
+        : `<span class="anime-badge episode">✅ ${anime.episode_count || 'Completed'}</span>
+           ${anime.rating ? `<span class="anime-badge rating">⭐ ${anime.rating}</span>` : ''}`;
     
     const dateInfo = type === 'ongoing'
-        ? `Rilis: ${anime.newest_release_date}`
-        : `Selesai: ${anime.last_release_date}`;
+        ? anime.newest_release_date ? `Rilis: ${anime.newest_release_date}` : ''
+        : anime.last_release_date ? `Selesai: ${anime.last_release_date}` : '';
+    
+    const typeBadge = isDonghua ? `<span class="anime-badge" style="background: #ff6b6b;">🐉 Donghua</span>` : '';
     
     card.innerHTML = `
         <img src="${anime.poster}" alt="${anime.title}" class="anime-poster" loading="lazy" onerror="this.src='https://via.placeholder.com/220x320?text=No+Image'">
         <div class="anime-info">
             <h3 class="anime-title">${anime.title}</h3>
             <div class="anime-meta">
+                ${typeBadge}
                 ${episodeInfo}
             </div>
-            <p class="anime-date">${dateInfo}</p>
+            ${dateInfo ? `<p class="anime-date">${dateInfo}</p>` : ''}
         </div>
     `;
     
     // Add click event to navigate to detail page
     card.addEventListener('click', () => {
-        const slug = anime.slug.replace('https://otakudesu.best/anime/', '').replace('/', '');
-        window.location.href = `detail.html?slug=${slug}`;
+        let slug = anime.slug;
+        
+        // Clean slug for donghua
+        if (isDonghua && typeof slug === 'string') {
+            slug = slug.replace(/^https?:\/\/[^\/]+\/anichin\//, '');
+            slug = slug.replace(/^https?:\/\/[^\/]+\/donghua\//, '');
+            slug = slug.replace(/^https?:\/\/[^\/]+\/donghua\/donghua\//, '');
+            slug = slug.replace(/^https?:\/\/[^\/]+\/donghua\/detail\//, '');
+            slug = slug.replace(/\/anichin\/episode\//, '');
+            slug = slug.replace(/\/anichin\/detail\//, '');
+            slug = slug.replace(/\/$/, '');
+            slug = slug.replace(/-episode-\d+.*$/i, '');
+            slug = slug.replace(/-tamat-subtitle-indonesia$/i, '');
+            slug = slug.trim();
+            slug = slug.replace(/^https?:\/\//, '');
+            slug = slug.replace(/^[^\/]+\//, '');
+            slug = slug.replace(/^donghua\//, '');
+            slug = slug.trim();
+        } else if (!isDonghua && typeof slug === 'string') {
+            slug = slug.replace('https://otakudesu.best/anime/', '').replace('/', '');
+        }
+        
+        const detailUrl = isDonghua 
+            ? `detail.html?slug=${encodeURIComponent(slug)}&type=donghua`
+            : `detail.html?slug=${encodeURIComponent(slug)}`;
+        window.location.href = detailUrl;
     });
     
     return card;
@@ -99,6 +221,50 @@ function displayCompletedAnime(animeList) {
     
     animeList.forEach(anime => {
         const card = createAnimeCard(anime, 'completed');
+        container.appendChild(card);
+    });
+}
+
+// Display ongoing donghua
+function displayOngoingDonghua(donghuaList) {
+    const container = document.getElementById('donghua-ongoing-container');
+    
+    if (!container) {
+        console.error('donghua-ongoing-container element not found');
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    if (!donghuaList || donghuaList.length === 0) {
+        container.innerHTML = '<p class="error-message">Tidak ada donghua ongoing yang tersedia</p>';
+        return;
+    }
+    
+    donghuaList.forEach(donghua => {
+        const card = createAnimeCard(donghua, 'ongoing', true);
+        container.appendChild(card);
+    });
+}
+
+// Display completed donghua
+function displayCompletedDonghua(donghuaList) {
+    const container = document.getElementById('donghua-completed-container');
+    
+    if (!container) {
+        console.error('donghua-completed-container element not found');
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    if (!donghuaList || donghuaList.length === 0) {
+        container.innerHTML = '<p class="error-message">Tidak ada donghua yang selesai</p>';
+        return;
+    }
+    
+    donghuaList.forEach(donghua => {
+        const card = createAnimeCard(donghua, 'completed', true);
         container.appendChild(card);
     });
 }
@@ -150,6 +316,8 @@ async function init() {
         // Verify containers exist
         const ongoingContainer = document.getElementById('ongoing-container');
         const completedContainer = document.getElementById('completed-container');
+        const donghuaOngoingContainer = document.getElementById('donghua-ongoing-container');
+        const donghuaCompletedContainer = document.getElementById('donghua-completed-container');
         
         if (!ongoingContainer) {
             console.error('ongoing-container not found in DOM');
@@ -161,49 +329,112 @@ async function init() {
             return;
         }
         
+        if (!donghuaOngoingContainer) {
+            console.error('donghua-ongoing-container not found in DOM');
+        }
+        
+        if (!donghuaCompletedContainer) {
+            console.error('donghua-completed-container not found in DOM');
+        }
+        
         console.log('Containers found, proceeding with initialization...');
         
         // Show loading states
         showLoadingState('ongoing-container');
         showLoadingState('completed-container');
+        showLoadingState('donghua-ongoing-container');
+        showLoadingState('donghua-completed-container');
         
-        // Fetch data from API with timeout
-        const data = await Promise.race([
-            fetchAnimeData(),
-            new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Request timeout')), 15000)
-            )
+        // Fetch anime and donghua data in parallel
+        const [animeData, donghuaData] = await Promise.allSettled([
+            Promise.race([
+                fetchAnimeData(),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Request timeout')), 15000)
+                )
+            ]),
+            Promise.race([
+                fetchDonghuaData(),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Request timeout')), 15000)
+                )
+            ])
         ]);
         
-        console.log('Homepage data loaded:', data);
-        
-        // Display ongoing anime
-        if (data.ongoing_anime && data.ongoing_anime.length > 0) {
-            displayOngoingAnime(data.ongoing_anime);
+        // Process anime data
+        if (animeData.status === 'fulfilled') {
+            const data = animeData.value;
+            console.log('Homepage anime data loaded:', data);
+            
+            // Display ongoing anime
+            if (data.ongoing_anime && data.ongoing_anime.length > 0) {
+                displayOngoingAnime(data.ongoing_anime);
+            } else {
+                showEmptyState('ongoing-container', 'Belum ada anime ongoing');
+            }
+            
+            // Display completed anime
+            if (data.complete_anime && data.complete_anime.length > 0) {
+                displayCompletedAnime(data.complete_anime);
+            } else {
+                showEmptyState('completed-container', 'Belum ada anime completed');
+            }
         } else {
-            showEmptyState('ongoing-container', 'Belum ada anime ongoing');
+            console.error('Failed to load anime data:', animeData.reason);
+            showError('ongoing-container', 'Gagal memuat data anime. Periksa koneksi internet Anda.');
+            showError('completed-container', 'Gagal memuat data anime. Periksa koneksi internet Anda.');
         }
         
-        // Display completed anime
-        if (data.complete_anime && data.complete_anime.length > 0) {
-            displayCompletedAnime(data.complete_anime);
+        // Process donghua data
+        if (donghuaData.status === 'fulfilled') {
+            const data = donghuaData.value;
+            console.log('Homepage donghua data loaded:', data);
+            
+            // Display ongoing donghua
+            if (data.ongoing_anime && data.ongoing_anime.length > 0) {
+                displayOngoingDonghua(data.ongoing_anime);
+            } else {
+                showEmptyState('donghua-ongoing-container', 'Belum ada donghua ongoing');
+            }
+            
+            // Display completed donghua
+            if (data.complete_anime && data.complete_anime.length > 0) {
+                displayCompletedDonghua(data.complete_anime);
+            } else {
+                showEmptyState('donghua-completed-container', 'Belum ada donghua completed');
+            }
         } else {
-            showEmptyState('completed-container', 'Belum ada anime completed');
+            console.error('Failed to load donghua data:', donghuaData.reason);
+            // Only show error if it's not a 404 (API might not be available)
+            if (donghuaData.reason && !donghuaData.reason.message?.includes('404')) {
+                showError('donghua-ongoing-container', 'Gagal memuat data donghua. Periksa koneksi internet Anda.');
+                showError('donghua-completed-container', 'Gagal memuat data donghua. Periksa koneksi internet Anda.');
+            } else {
+                showEmptyState('donghua-ongoing-container', 'Data donghua belum tersedia');
+                showEmptyState('donghua-completed-container', 'Data donghua belum tersedia');
+            }
         }
         
     } catch (error) {
         console.error('Homepage init error:', error);
         
         // Show specific error messages
-        if (error.message.includes('timeout')) {
+        const errorMessage = error.message || '';
+        if (errorMessage.includes('timeout')) {
             showError('ongoing-container', 'Koneksi terlalu lambat. Silakan refresh halaman.');
             showError('completed-container', 'Koneksi terlalu lambat. Silakan refresh halaman.');
-        } else if (error.message.includes('AI Detector')) {
+            showError('donghua-ongoing-container', 'Koneksi terlalu lambat. Silakan refresh halaman.');
+            showError('donghua-completed-container', 'Koneksi terlalu lambat. Silakan refresh halaman.');
+        } else if (errorMessage.includes('AI Detector')) {
             showError('ongoing-container', 'Server sedang dalam mode perlindungan. Tunggu beberapa menit.');
             showError('completed-container', 'Server sedang dalam mode perlindungan. Tunggu beberapa menit.');
+            showError('donghua-ongoing-container', 'Server sedang dalam mode perlindungan. Tunggu beberapa menit.');
+            showError('donghua-completed-container', 'Server sedang dalam mode perlindungan. Tunggu beberapa menit.');
         } else {
             showError('ongoing-container', 'Gagal memuat data anime. Periksa koneksi internet Anda.');
             showError('completed-container', 'Gagal memuat data anime. Periksa koneksi internet Anda.');
+            showError('donghua-ongoing-container', 'Gagal memuat data donghua. Periksa koneksi internet Anda.');
+            showError('donghua-completed-container', 'Gagal memuat data donghua. Periksa koneksi internet Anda.');
         }
     }
 }
