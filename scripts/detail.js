@@ -168,10 +168,11 @@ async function fetchAnimeDetail(slug) {
                     // Handle anime response structure
                     if (result.status === 'success' && result.data) {
                         console.log('✅ Found anime detail data from:', url);
-                        return result.data;
+                        // Transform new API structure to match expected format
+                        return transformAnimeResponse(result.data);
                     } else if (result.data && !result.status) {
                         console.log('✅ Found anime detail data (direct) from:', url);
-                        return result.data;
+                        return transformAnimeResponse(result.data);
                     }
                 }
                 
@@ -198,6 +199,73 @@ async function fetchAnimeDetail(slug) {
         console.error(`Error fetching ${contentType} detail:`, error);
         throw error;
     }
+}
+
+// Transform new anime API response to match expected format
+function transformAnimeResponse(animeData) {
+    // Map episodeList to episode_lists format
+    const episodeLists = (animeData.episodeList || []).map((ep, index) => {
+        // Extract episode number from title or use index
+        let episodeNumber = index + 1;
+        const episodeMatch = ep.title?.match(/Episode\s+(\d+)/i);
+        if (episodeMatch) {
+            episodeNumber = parseInt(episodeMatch[1]);
+        }
+        
+        return {
+            episode_number: episodeNumber.toString(),
+            episode: ep.title || `Episode ${episodeNumber}`,
+            slug: ep.episodeId || ep.href?.replace('/anime/episode/', '') || '',
+            otakudesu_url: ep.otakudesuUrl || ''
+        };
+    });
+    
+    // Map genreList to genres format
+    const genres = (animeData.genreList || []).map(genre => ({
+        name: genre.title || genre.name || '',
+        otakudesu_url: genre.otakudesuUrl || ''
+    }));
+    
+    // Map recommendedAnimeList to recommendations format
+    const recommendations = (animeData.recommendedAnimeList || []).map(rec => ({
+        title: rec.title || '',
+        poster: rec.poster || '',
+        slug: rec.animeId || rec.href?.replace('/anime/anime/', '') || '',
+        otakudesu_url: rec.otakudesuUrl || ''
+    }));
+    
+    // Process synopsis - API returns object with paragraphs array
+    let synopsis = 'Sinopsis tidak tersedia.';
+    if (animeData.synopsis) {
+        if (typeof animeData.synopsis === 'string') {
+            synopsis = animeData.synopsis;
+        } else if (animeData.synopsis.paragraphs && Array.isArray(animeData.synopsis.paragraphs)) {
+            // Join paragraphs into single string, filter out empty ones
+            const paragraphs = animeData.synopsis.paragraphs.filter(p => p && p.trim());
+            if (paragraphs.length > 0) {
+                synopsis = paragraphs.join('\n\n');
+            }
+        }
+    }
+    
+    return {
+        title: animeData.title || '',
+        japanese_title: animeData.japanese || '',
+        poster: animeData.poster || '',
+        rating: animeData.score || 'N/A',
+        status: animeData.status || 'Unknown',
+        type: animeData.type || 'TV',
+        episode_count: animeData.episodes || (episodeLists.length > 0 ? episodeLists.length.toString() : '?'),
+        duration: animeData.duration || '',
+        release_date: animeData.aired || '',
+        studio: Array.isArray(animeData.studios) ? animeData.studios.join(', ') : (animeData.studios || ''),
+        producers: Array.isArray(animeData.producers) ? animeData.producers.join(', ') : (animeData.producers || ''),
+        synopsis: synopsis,
+        genres: genres,
+        episode_lists: episodeLists,
+        recommendations: recommendations,
+        batch: animeData.batch || null
+    };
 }
 
 // Transform donghua API response to match anime structure
@@ -282,14 +350,38 @@ async function fallbackDetailSearch(slug) {
             return null;
         }
         
-        const data = await response.json();
-        if (data.status !== 'success' || !data.data) {
-            console.log('Home API data invalid:', data);
+        const result = await response.json();
+        if (result.status !== 'success' || !result.data) {
+            console.log('Home API data invalid:', result);
             return null;
         }
         
-        // Search in ongoing and completed anime
-        const allAnime = [...(data.data.ongoing_anime || []), ...(data.data.complete_anime || [])];
+        // Process new API structure: { ongoing: { animeList: [...] }, completed: { animeList: [...] } }
+        let allAnime = [];
+        const data = result.data;
+        
+        // Process ongoing anime - ongoing is an OBJECT not array
+        if (data.ongoing && data.ongoing.animeList && Array.isArray(data.ongoing.animeList)) {
+            allAnime = allAnime.concat(data.ongoing.animeList.map(anime => ({
+                title: anime.title,
+                poster: anime.poster,
+                slug: anime.animeId || anime.href?.replace('/anime/anime/', '') || '',
+                status: 'Ongoing',
+                episodes: anime.episodes
+            })));
+        }
+        
+        // Process completed anime - completed is an OBJECT not array
+        if (data.completed && data.completed.animeList && Array.isArray(data.completed.animeList)) {
+            allAnime = allAnime.concat(data.completed.animeList.map(anime => ({
+                title: anime.title,
+                poster: anime.poster,
+                slug: anime.animeId || anime.href?.replace('/anime/anime/', '') || '',
+                status: 'Completed',
+                episodes: anime.episodes
+            })));
+        }
+        
         console.log('Total anime in home API:', allAnime.length);
         
         // Try different matching strategies

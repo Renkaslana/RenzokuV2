@@ -304,6 +304,93 @@ function cleanDonghuaSlug(slug) {
     return slug.trim();
 }
 
+// Transform anime episode API response to expected format
+function transformAnimeEpisodeResponse(episodeData) {
+    // API structure: { title, defaultStreamingUrl, server: { qualities: [...] }, downloadUrl, ... }
+    
+    // Extract streaming servers from qualities
+    const streamingServers = [];
+    if (episodeData.server && episodeData.server.qualities) {
+        episodeData.server.qualities.forEach(quality => {
+            if (quality.serverList && Array.isArray(quality.serverList)) {
+                quality.serverList.forEach(server => {
+                    streamingServers.push({
+                        quality: quality.title,
+                        server_name: server.title,
+                        server_id: server.serverId,
+                        href: server.href,
+                        // Will be populated when clicked
+                        url: null
+                    });
+                });
+            }
+        });
+    }
+    
+    // Extract download URLs
+    const downloadUrls = {
+        mkv_urls: [],
+        mp4_urls: []
+    };
+    
+    if (episodeData.downloadUrl && episodeData.downloadUrl.qualities) {
+        // Group by quality to match expected structure
+        const qualityGroups = {
+            mkv: {},
+            mp4: {}
+        };
+        
+        episodeData.downloadUrl.qualities.forEach(quality => {
+            const qualityTitle = quality.title || '';
+            const size = quality.size || '';
+            const urls = quality.urls || [];
+            
+            // Determine if MKV or MP4
+            const isMkv = qualityTitle.toUpperCase().includes('MKV');
+            const cleanQuality = qualityTitle.replace(/^(MKV|Mp4)_/i, ''); // Remove prefix
+            
+            // Create download item with all URLs for this quality
+            const downloadItem = {
+                quality: cleanQuality,
+                size: size,
+                resolution: cleanQuality, // Add resolution field
+                urls: urls.map(urlObj => ({
+                    provider: urlObj.title || 'Unknown',
+                    host: urlObj.title || 'Unknown',
+                    url: urlObj.url || ''
+                }))
+            };
+            
+            // Add to appropriate array
+            if (isMkv) {
+                downloadUrls.mkv_urls.push(downloadItem);
+            } else {
+                downloadUrls.mp4_urls.push(downloadItem);
+            }
+        });
+    }
+    
+    return {
+        episode: episodeData.title || '',
+        anime: {
+            title: episodeData.info?.title || '',
+            slug: episodeData.animeId || ''
+        },
+        stream_url: episodeData.defaultStreamingUrl || '',
+        streaming_servers: streamingServers,
+        download_urls: downloadUrls,
+        prev_episode: episodeData.hasPrevEpisode ? {
+            slug: episodeData.prevEpisode?.episodeId || '',
+            title: episodeData.prevEpisode?.title || ''
+        } : null,
+        next_episode: episodeData.hasNextEpisode ? {
+            slug: episodeData.nextEpisode?.episodeId || '',
+            title: episodeData.nextEpisode?.title || ''
+        } : null,
+        release_time: episodeData.releaseTime || ''
+    };
+}
+
 // Clean donghua episode slug for navigation
 function cleanDonghuaEpisodeSlug(slug) {
     if (!slug) return '';
@@ -447,11 +534,11 @@ async function fetchEpisodeFromEndpoint(baseUrl, slug) {
         // Handle anime response structure
         if (result.status === 'success' && result.data) {
             console.log('Anime episode data received');
-            return result.data;
+            return transformAnimeEpisodeResponse(result.data);
         } else if (result.data && !result.status) {
             // Some APIs return data directly
             console.log('Anime episode data received (direct structure)');
-            return result.data;
+            return transformAnimeEpisodeResponse(result.data);
         } else if (result.episode || result.stream_url) {
             // Direct episode structure (fallback)
             console.log('Anime episode data received (alternative structure)');
@@ -620,6 +707,9 @@ function setupVideoPlayer(videoPlayer, episode) {
     const contentType = getContentType();
     const isDonghua = contentType === 'donghua';
     
+    // Check if it's an iframe or video element
+    const isIframe = videoPlayer.tagName.toLowerCase() === 'iframe';
+    
     // Primary stream URL
     let primaryUrl = episode.stream_url;
     
@@ -632,25 +722,36 @@ function setupVideoPlayer(videoPlayer, episode) {
     
     if (primaryUrl) {
         videoPlayer.src = primaryUrl;
+        console.log('Video player set with URL:', primaryUrl.substring(0, 50) + '...');
         
-        // Add error handling for video load failures
-        videoPlayer.addEventListener('error', (e) => {
-            console.log('Primary video source failed, trying fallback...');
-            handleVideoError(videoPlayer, episode);
-        });
-        
-        // Add load success handler
-        videoPlayer.addEventListener('loadeddata', () => {
-            console.log('Video loaded successfully');
-        });
+        // Only add event listeners for video elements, not iframes
+        if (!isIframe) {
+            // Add error handling for video load failures
+            videoPlayer.addEventListener('error', (e) => {
+                console.log('Primary video source failed, trying fallback...');
+                handleVideoError(videoPlayer, episode);
+            });
+            
+            // Add load success handler
+            videoPlayer.addEventListener('loadeddata', () => {
+                console.log('Video loaded successfully');
+            });
+        }
     } else {
         console.warn('No stream URL provided for episode');
-        handleVideoError(videoPlayer, episode);
+        if (!isIframe) {
+            handleVideoError(videoPlayer, episode);
+        }
     }
     
     // For donghua, setup streaming server selector if multiple servers available
     if (isDonghua && episode.streaming_servers && episode.streaming_servers.length > 1) {
         setupStreamingServers(videoPlayer, episode);
+    }
+    
+    // For anime, always setup streaming servers selector
+    if (!isDonghua && episode.streaming_servers && episode.streaming_servers.length > 0) {
+        setupAnimeStreamingServers(videoPlayer, episode);
     }
 }
 
@@ -752,6 +853,134 @@ function setupStreamingServers(videoPlayer, episode) {
             videoPlayer.src = selectedServer.url;
         }
     });
+}
+
+// Setup anime streaming servers with quality selection
+async function setupAnimeStreamingServers(videoPlayer, episode) {
+    if (!episode.streaming_servers || episode.streaming_servers.length === 0) return;
+    
+    const playerContainer = videoPlayer.parentElement;
+    if (!playerContainer) return;
+    
+    // Group servers by quality
+    const qualityGroups = {};
+    episode.streaming_servers.forEach(server => {
+        if (!qualityGroups[server.quality]) {
+            qualityGroups[server.quality] = [];
+        }
+        qualityGroups[server.quality].push(server);
+    });
+    
+    // Create quality and server selector
+    const serverSelector = document.createElement('div');
+    serverSelector.className = 'streaming-servers-selector';
+    serverSelector.innerHTML = `
+        <label for="quality-select">Kualitas:</label>
+        <select id="quality-select" class="quality-select server-select">
+            ${Object.keys(qualityGroups).map((quality, index) => 
+                `<option value="${quality}" ${index === 0 ? 'selected' : ''}>${quality}</option>`
+            ).join('')}
+        </select>
+        
+        <label for="server-select" style="margin-left: 15px;">Server:</label>
+        <select id="server-select" class="server-select">
+            <!-- Will be populated based on quality -->
+        </select>
+    `;
+    
+    // Insert before player container (not inside it)
+    playerContainer.parentElement.insertBefore(serverSelector, playerContainer);
+    
+    const qualitySelect = serverSelector.querySelector('#quality-select');
+    const serverSelect = serverSelector.querySelector('#server-select');
+    
+    // Function to update server options based on selected quality
+    function updateServerOptions(quality) {
+        const servers = qualityGroups[quality] || [];
+        serverSelect.innerHTML = servers.map((server, index) => 
+            `<option value="${index}" data-server-id="${server.server_id}">${server.server_name}</option>`
+        ).join('');
+        
+        // Load first server by default
+        if (servers.length > 0) {
+            loadStreamUrl(servers[0], videoPlayer);
+        }
+    }
+    
+    // Initialize with first quality
+    const firstQuality = Object.keys(qualityGroups)[0];
+    if (firstQuality) {
+        updateServerOptions(firstQuality);
+    }
+    
+    // Handle quality change
+    qualitySelect.addEventListener('change', (e) => {
+        updateServerOptions(e.target.value);
+    });
+    
+    // Handle server change
+    serverSelect.addEventListener('change', (e) => {
+        const quality = qualitySelect.value;
+        const servers = qualityGroups[quality] || [];
+        const selectedIndex = parseInt(e.target.value);
+        const selectedServer = servers[selectedIndex];
+        
+        if (selectedServer) {
+            loadStreamUrl(selectedServer, videoPlayer);
+        }
+    });
+}
+
+// Load stream URL from server endpoint
+async function loadStreamUrl(server, videoPlayer) {
+    if (!server || !server.server_id) return;
+    
+    // Check if it's an iframe
+    const isIframe = videoPlayer.tagName.toLowerCase() === 'iframe';
+    
+    // Show loading indicator on video
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.className = 'video-loading-overlay';
+    loadingOverlay.innerHTML = '<div class="spinner"></div><p>Memuat video...</p>';
+    loadingOverlay.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; z-index: 10;';
+    
+    const playerContainer = videoPlayer.parentElement;
+    playerContainer.style.position = 'relative';
+    playerContainer.appendChild(loadingOverlay);
+    
+    try {
+        // Call server API to get stream URL
+        const serverUrl = `https://www.sankavollerei.com/anime/server/${server.server_id}`;
+        const response = await fetch(serverUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'application/json',
+                'Referer': 'https://www.sankavollerei.com/'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.status === 'success' && result.data && result.data.url) {
+            videoPlayer.src = result.data.url;
+            console.log(`Loaded stream from ${server.server_name} (${server.quality}): ${result.data.url.substring(0, 50)}...`);
+        } else {
+            throw new Error('Invalid server response');
+        }
+        
+    } catch (error) {
+        console.error('Failed to load stream URL:', error);
+        alert(`Gagal memuat video dari server ${server.server_name}. Silakan coba server lain.`);
+    } finally {
+        // Remove loading overlay
+        if (loadingOverlay.parentElement) {
+            loadingOverlay.parentElement.removeChild(loadingOverlay);
+        }
+    }
 }
 
 // Extract anime/donghua slug from URL - Unified helper
@@ -904,7 +1133,9 @@ function displayDownloadLinks(downloadUrls) {
     let mkvDownloads = null;
     
     // Try different possible structures
-    if (downloadUrls.mp4 && Array.isArray(downloadUrls.mp4)) {
+    if (downloadUrls.mp4_urls && Array.isArray(downloadUrls.mp4_urls)) {
+        mp4Downloads = downloadUrls.mp4_urls;
+    } else if (downloadUrls.mp4 && Array.isArray(downloadUrls.mp4)) {
         mp4Downloads = downloadUrls.mp4;
     } else if (downloadUrls.downloads && downloadUrls.downloads.mp4) {
         mp4Downloads = downloadUrls.downloads.mp4;
@@ -916,7 +1147,9 @@ function displayDownloadLinks(downloadUrls) {
     }
     
     // Try different possible structures for MKV
-    if (downloadUrls.mkv && Array.isArray(downloadUrls.mkv)) {
+    if (downloadUrls.mkv_urls && Array.isArray(downloadUrls.mkv_urls)) {
+        mkvDownloads = downloadUrls.mkv_urls;
+    } else if (downloadUrls.mkv && Array.isArray(downloadUrls.mkv)) {
         mkvDownloads = downloadUrls.mkv;
     } else if (downloadUrls.downloads && downloadUrls.downloads.mkv) {
         mkvDownloads = downloadUrls.downloads.mkv;

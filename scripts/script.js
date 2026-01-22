@@ -20,7 +20,44 @@ async function fetchAnimeData() {
         const result = await response.json();
         
         if (result.status === 'success' && result.data) {
-            return result.data;
+            // Transform new API structure to expected format
+            const data = result.data;
+            
+            // Extract anime list from new structure
+            // API returns: { ongoing: { animeList: [...] }, completed: { animeList: [...] } }
+            let ongoingAnime = [];
+            let completedAnime = [];
+            
+            // Process ongoing anime - ongoing is an OBJECT not array
+            if (data.ongoing && data.ongoing.animeList && Array.isArray(data.ongoing.animeList)) {
+                ongoingAnime = data.ongoing.animeList.map(anime => ({
+                    title: anime.title,
+                    poster: anime.poster,
+                    slug: anime.animeId || anime.href?.replace('/anime/anime/', '') || '',
+                    current_episode: `Episode ${anime.episodes}`,
+                    release_day: anime.releaseDay,
+                    newest_release_date: anime.latestReleaseDate,
+                    status: 'Ongoing'
+                }));
+            }
+            
+            // Process completed anime - completed is an OBJECT not array
+            if (data.completed && data.completed.animeList && Array.isArray(data.completed.animeList)) {
+                completedAnime = data.completed.animeList.map(anime => ({
+                    title: anime.title,
+                    poster: anime.poster,
+                    slug: anime.animeId || anime.href?.replace('/anime/anime/', '') || '',
+                    episode_count: anime.episodes ? `${anime.episodes} Episode` : 'Completed',
+                    rating: anime.rating || anime.score || '',
+                    last_release_date: anime.latestReleaseDate,
+                    status: 'Completed'
+                }));
+            }
+            
+            return {
+                ongoing_anime: ongoingAnime,
+                complete_anime: completedAnime
+            };
         } else {
             throw new Error('Data tidak valid dari API');
         }

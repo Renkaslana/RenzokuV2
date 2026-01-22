@@ -1,5 +1,6 @@
 // Search API Configuration
 const SEARCH_API_URL = 'https://www.sankavollerei.com/anime/search';
+const DONGHUA_SEARCH_API_URL = 'https://www.sankavollerei.com/anime/donghua/search';
 const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
 
 // Get search query from URL parameters
@@ -11,11 +12,10 @@ function getSearchQuery() {
 // Fetch anime search results
 async function fetchAnimeSearchResults(query) {
     try {
+        // Primary endpoint: /anime/search/{query} - ini yang berfungsi!
         const endpoints = [
-            `${SEARCH_API_URL}?keyword=${encodeURIComponent(query)}`,
             `${SEARCH_API_URL}/${encodeURIComponent(query)}`,
-            `https://www.sankavollerei.com/anime/search?q=${encodeURIComponent(query)}`,
-            `https://www.sankavollerei.com/anime/search?search=${encodeURIComponent(query)}`
+            `https://www.sankavollerei.com/anime/search/${encodeURIComponent(query)}`
         ];
         
         for (const url of endpoints) {
@@ -57,7 +57,18 @@ async function fetchAnimeSearchResults(query) {
                     continue;
                 }
                 
-                if (result.status === 'success' && result.search_results) {
+                // Handle new API structure: { data: { animeList: [...] } }
+                if (result.status === 'success' && result.data && result.data.animeList) {
+                    return result.data.animeList.map(item => ({
+                        title: item.title,
+                        poster: item.poster,
+                        slug: item.animeId || item.href?.replace('/anime/anime/', '') || '',
+                        status: item.status,
+                        score: item.score,
+                        genres: item.genreList?.map(g => g.title) || [],
+                        type: 'anime'
+                    }));
+                } else if (result.status === 'success' && result.search_results) {
                     return result.search_results.map(item => ({ ...item, type: 'anime' }));
                 } else if (result.status === 'success (fallback)' && result.search_results) {
                     return result.search_results.map(item => ({ ...item, type: 'anime' }));
@@ -83,11 +94,10 @@ async function fetchAnimeSearchResults(query) {
 // Fetch donghua search results
 async function fetchDonghuaSearchResults(query) {
     try {
+        // Primary endpoint: /anime/donghua/search/{query} - ini yang berfungsi!
         const endpoints = [
-            `${DONGHUA_SEARCH_API_URL}?keyword=${encodeURIComponent(query)}`,
             `${DONGHUA_SEARCH_API_URL}/${encodeURIComponent(query)}`,
-            `https://www.sankavollerei.com/anime/donghua/search?q=${encodeURIComponent(query)}`,
-            `https://www.sankavollerei.com/anime/donghua/search?search=${encodeURIComponent(query)}`
+            `https://www.sankavollerei.com/anime/donghua/search/${encodeURIComponent(query)}`
         ];
         
         for (const url of endpoints) {
@@ -129,12 +139,18 @@ async function fetchDonghuaSearchResults(query) {
                     continue;
                 }
                 
-                if (result.status === 'success' && result.search_results) {
+                // Handle new API structure: { data: [...] } (direct array)
+                if (result.data && Array.isArray(result.data)) {
+                    return result.data.map(item => ({
+                        title: item.title,
+                        poster: item.poster,
+                        slug: item.slug || item.href?.replace('/donghua/detail/', '') || '',
+                        status: item.status,
+                        type: item.type || 'Donghua',
+                        contentType: 'donghua'
+                    }));
+                } else if (result.status === 'success' && result.search_results) {
                     return result.search_results.map(item => ({ ...item, type: 'donghua' }));
-                } else if (result.status === 'success (fallback)' && result.search_results) {
-                    return result.search_results.map(item => ({ ...item, type: 'donghua' }));
-                } else if (result.data && Array.isArray(result.data)) {
-                    return result.data.map(item => ({ ...item, type: 'donghua' }));
                 } else if (Array.isArray(result)) {
                     return result.map(item => ({ ...item, type: 'donghua' }));
                 }
